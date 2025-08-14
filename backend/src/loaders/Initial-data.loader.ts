@@ -1,16 +1,13 @@
+import cache from '@libs/cache';
+import { AssumptionModel } from '@models/assumption.model';
 import mongoose from 'mongoose';
-import cache from '../cache';
 import path from 'path';
 import { Worker } from 'worker_threads';
 
-export default async function loadFilterData() {
+export default async function loadAssumptions() {
   // Assume `cache` is some object with a .get() method (you'll need to define this)
-  const cacheRequests = ['AnnuityRate', 'MortalityRate'];
+  const assumptions = await AssumptionModel.find({ valid: true }, { name: 1, _id: 0, data: 1 }).lean();
+  console.log(assumptions);
 
-  for (let i = 0; i < cacheRequests.length; i++) {
-    const key = cacheRequests[i];
-    const model = mongoose.models[key];
-    const data = await model.find().lean();
-    cache.set(key, data);
-  }
+  cache.set('assumptions', assumptions);
 }

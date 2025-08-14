@@ -1,14 +1,15 @@
-import "./extensions/string.extension";
+import './extensions/string.extension';
 
-import express from "express";
+import express from 'express';
 // Import necessary modules
-import cors from "cors"; // CORS middleware to allow cross-origin requests
-import bodyParser from "body-parser"; // Body parser to parse incoming JSON request bodies
-import compression from "compression"; // Compression middleware to reduce the size of responses
-import { loadRoutes } from "@loaders/route.loader";
-import mongoConnect from "@configs/db";
-import { ROUTES_PATH } from "@configs/app.config";
-import { customResponseMiddleware } from "@middlewares/custome-response.middleware";
+import cors from 'cors'; // CORS middleware to allow cross-origin requests
+import bodyParser from 'body-parser'; // Body parser to parse incoming JSON request bodies
+import compression from 'compression'; // Compression middleware to reduce the size of responses
+import { loadRoutes } from '@loaders/route.loader';
+import mongoConnect from '@configs/db';
+import { ROUTES_PATH } from '@configs/app.config';
+import { customResponseMiddleware } from '@middlewares/custome-response.middleware';
+import loadAssumptions from '@loaders/Initial-data.loader';
 
 // Initialize Express app
 const app = express();
@@ -30,9 +31,9 @@ loadRoutes(app, ROUTES_PATH);
 // Start server only after DB connects
 const startServer = async () => {
   await mongoConnect(); // make sure DB connection is established
-
+  loadAssumptions();
   app.listen(3000, () => {
-    console.log("Server running at http://localhost:3000");
+    console.log('Server running at http://localhost:3000');
   });
 };
 
