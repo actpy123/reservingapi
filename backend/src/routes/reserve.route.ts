@@ -1,11 +1,11 @@
-import { Request, Response, Router } from "express";
+import { uploadAssumptions } from "@controllers/reserve.controller";
+import { Router } from "express";
+import multer, { Multer, StorageEngine } from "multer";
+const storage: StorageEngine = multer.memoryStorage();
+const upload: Multer = multer({ storage });
 
 const orderRoute = Router();
 
-orderRoute.get("/", (req: Request, res: Response) => {
-  res.sendCustomResponse(200, {
-    message: "Annuity rates inserted successfully.",
-  });
-});
+orderRoute.post("/", upload.single("files"), uploadAssumptions);
 
 export default orderRoute;

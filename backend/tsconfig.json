@@ -14,7 +14,10 @@
       "@loaders/*": ["loaders/*"],
       "@middlewares/*": ["middlewares/*"],
       "@extensions/*": ["extensions/*"],
-      "@configs/*": ["configs/*"]
+      "@configs/*": ["configs/*"],
+      "@libs/*": ["libs/*"],
+      "@constants/*": ["constants/*"],
+      "@types/*": ["types/*"]
     }
   },
   "include": ["src"],
