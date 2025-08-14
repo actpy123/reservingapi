@@ -1,7 +1,20 @@
 import cache from '@libs/cache';
+import { AssumptionModel } from '@models/assumption.model';
 import { unzip } from '@utils/app.utils';
+import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
 import * as Papa from 'papaparse';
+import { parse } from 'path';
+
+export async function getCurrentAssumptions(req: Request, res: Response) {
+  // You could process files here or send them back
+  res.sendCustomResponse(200, {
+    message: 'Files uploaded and stored in memory.',
+    data: {
+      files: await cache.get('assumptions'),
+    },
+  });
+}
 
 export async function uploadAssumptions(req: Request, res: Response) {
   const assumptionFileZip = req.file as Express.Multer.File; // 👈 Type assertion here
@@ -11,24 +24,31 @@ export async function uploadAssumptions(req: Request, res: Response) {
   }
   try {
     const extractedFiles = unzip(assumptionFileZip.buffer);
+    await AssumptionModel.updateMany({ valid: true }, { $set: { valid: false } });
     cache.clear();
+    const assumptionId = randomUUID();
+
+    const assumptions = [];
 
     for (const file of extractedFiles) {
       if (file.fileName.includes('.csv')) {
+        const assumptionName = parse(file.fileName).name;
+
         const csvString = file.content.toString('utf8');
         const result = Papa.parse(csvString, {
           header: true, // First row as header
           skipEmptyLines: true,
         });
-        cache.set(file.fileName, result.data);
+        assumptions.push({ name: assumptionName, data: result.data, assumptionId });
       }
     }
+    cache.set('assumptions', assumptions);
+    const saved = await AssumptionModel.insertMany(assumptions);
 
-    // You could process files here or send them back
     res.sendCustomResponse(200, {
       message: 'Files uploaded and stored in memory.',
       data: {
-        files: 'cache.,',
+        files: assumptions,
       },
     });
   } catch (err) {
