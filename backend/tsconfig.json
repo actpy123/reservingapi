@@ -17,7 +17,7 @@
       "@configs/*": ["configs/*"],
       "@libs/*": ["libs/*"],
       "@constants/*": ["constants/*"],
-      "@types/*": ["types/*"],
+      "@CustomTypes/*": ["types/*"],
       "@models/*": ["models/*"]
     }
   },
