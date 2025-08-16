@@ -5,6 +5,14 @@ import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
 import * as Papa from 'papaparse';
 import { parse } from 'path';
+import { Scenario } from '@CustomTypes/app.type';
+import {
+  complieInputs,
+  createPolicySummaryArray,
+  findProductByScenario,
+  loadRates,
+  normalizeProductPercents,
+} from '@libs/reserve.libs';
 
 export async function getCurrentAssumptions(req: Request, res: Response) {
   // You could process files here or send them back
@@ -54,5 +62,47 @@ export async function uploadAssumptions(req: Request, res: Response) {
   } catch (err) {
     console.error(err);
     res.status(500).send('Failed to unzip file');
+  }
+}
+
+export async function reserveCalculator(req: Request, res: Response) {
+  const scenarios: Scenario[] = req.body;
+  const assumptions: any = await cache.get('assumptions');
+  const policySummaries = createPolicySummaryArray(1201);
+  let skippedPolicies = 0;
+  let successfulPolicies = 0;
+  try {
+    let product = findProductByScenario(assumptions, scenarios[0].scenarioCode);
+    product = normalizeProductPercents(product);
+    const mortalityRates = loadRates(assumptions, product['Mortality Table Number']);
+    const mortalityBERates = loadRates(assumptions, product['Mortality Loading BE Table Number']);
+    const morbidityRates = loadRates(assumptions, product['Morbidity Table Number']);
+    const lapseRates = loadRates(assumptions, product['Lapse Table Number']);
+    const interestRates = loadRates(assumptions, product['Interest Rate Table']);
+    const inflationRates = loadRates(assumptions, product['Expense Inflation Table']);
+    const gsvRates = loadRates(assumptions, product['GSV Table']);
+    const ssvRates = loadRates(assumptions, product['SSV Table']);
+    const maturityBenefitRates = loadRates(assumptions, product['Maturity Benefit Table']);
+    const incomeSurvivalBenefitRates = loadRates(assumptions, product['Income_Survival Benefit Table']);
+
+    for (const policyData of scenarios[0].data) {
+      try {
+        const cleanPolicyData = complieInputs(policyData, product);
+        console.log(JSON.stringify(cleanPolicyData));
+      } catch (error) {
+        skippedPolicies = skippedPolicies + 1;
+      }
+    }
+
+    // You could process files here or send them back
+    res.sendCustomResponse(200, {
+      data: { skippedPolicies, successfulPolicies },
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    res.sendCustomResponse(400, {
+      message: error.message,
+    });
   }
 }
