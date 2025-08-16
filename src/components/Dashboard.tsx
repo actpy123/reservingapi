@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ControlSheetForm from './ControlSheetForm';
 
-interface BumpRequest {
+interface ControlSheet {
   id: string;
   requestName: string;
   reason: string;
@@ -14,9 +14,9 @@ interface BumpRequest {
 
 const Dashboard: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [bumpRequests, setBumpRequests] = useState<BumpRequest[]>([]);
+  const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
 
-  const handleBumpRequest = () => {
+  const handleControlSheet = () => {
     setIsFormOpen(true);
   };
 
@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
                 <div className="w-20 h-1 bg-blue-500"></div>
               </div>
               <button
-                onClick={handleBumpRequest}
+                onClick={handleControlSheet}
                 className="bg-blue-600 text-white px-6 py-3 rounded font-semibold hover:bg-blue-700"
               >
                 + CONTROL SHEET ENTRY
@@ -99,31 +99,31 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Empty State */}
-              {bumpRequests.length === 0 && (
+              {controlSheets.length === 0 && (
                 <div className="py-16 text-center">
                   <div className="w-16 h-16 mx-auto mb-4 text-blue-500">
                     <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Request Found</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Control Sheet Found</h3>
                   <p className="text-gray-500">To create reserver calculation please click on Create Control Sheet Entry</p>
                 </div>
               )}
 
               {/* Table Body */}
-              {bumpRequests.length > 0 && (
+              {controlSheets.length > 0 && (
                 <div className="divide-y divide-gray-200">
-                  {bumpRequests.map((request) => (
-                    <div key={request.id} className="px-6 py-4 grid grid-cols-9 gap-4 text-sm text-gray-900">
-                      <div className="text-center">{request.requestName}</div>
-                      <div className="text-center">{request.reason}</div>
-                      <div className="text-center">{request.percentage}%</div>
-                      <div className="text-center">{request.createDate}</div>
-                      <div className="text-center">{request.startDate}</div>
-                      <div className="text-center">{request.endDate}</div>
-                      <div className="text-center">{request.syncDate}</div>
-                      <div className="text-center">{request.syncDate}</div>
+                  {controlSheets.map((controlSheet) => (
+                    <div key={controlSheet.id} className="px-6 py-4 grid grid-cols-9 gap-4 text-sm text-gray-900">
+                      <div className="text-center">{controlSheet.requestName}</div>
+                      <div className="text-center">{controlSheet.reason}</div>
+                      <div className="text-center">{controlSheet.percentage}%</div>
+                      <div className="text-center">{controlSheet.createDate}</div>
+                      <div className="text-center">{controlSheet.startDate}</div>
+                      <div className="text-center">{controlSheet.endDate}</div>
+                      <div className="text-center">{controlSheet.syncDate}</div>
+                      <div className="text-center">{controlSheet.syncDate}</div>
                       <div className="text-center">
                         <button className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded">
                           Edit
