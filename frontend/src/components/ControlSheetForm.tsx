@@ -39,20 +39,8 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-400 to-green-500 h-1"></div>
-        <div className="flex items-center justify-between p-6 border-b">
-        </div>
-
-        {/* Numbered Bar */}
-        <div className="bg-blue-100 px-6 py-3">
-          <input
-            type="text"
-            value="1"
-            className="w-16 text-center border border-gray-300 rounded px-2 py-1"
-            readOnly
-          />
-        </div>
+        {/* Header Bar */}
+        <div className="bg-blue-800 h-1"></div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -60,36 +48,30 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
 
           {/* Serial No */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Serial No:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Serial No:</label>
             <input
               type="text"
               value={formData.serialNo}
               onChange={(e) => handleInputChange('serialNo', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter Serial No"
+              placeholder="Enter Run No"
             />
           </div>
 
           {/* Product Code */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Code:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Product Code:</label>
             <input
               type="text"
               value={formData.productCode}
               onChange={(e) => handleInputChange('productCode', e.target.value)}
-              className="w-full px-3 py-2 border border-blue-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Input File Path */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Input File Path:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Input File Path:</label>
             <input
               type="url"
               value={formData.inputFilePath}
@@ -119,9 +101,7 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
 
           {/* Assumptions Path */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assumptions Path:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Assumptions Path:</label>
             <input
               type="url"
               value={formData.assumptionsPath}
@@ -149,11 +129,9 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             />
           </div>
 
-          {/* is_Run_Flag_True */}
+          {/* Run Indicator */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              is_Run_Flag_True:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">is_Run_Flag_True:</label>
             <div className="flex items-center space-x-6">
               <label className="flex items-center space-x-2">
                 <input
@@ -180,11 +158,9 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             </div>
           </div>
 
-          {/* is_DB_Flag */}
+          {/* is_DB_Flag (kept for parity if used later) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              is_DB_Flag:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">is_DB_Flag:</label>
             <div className="flex items-center space-x-6">
               <label className="flex items-center space-x-2">
                 <input
@@ -211,7 +187,7 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <div className="flex justify-end space-x-4 pt-6 border-t">
             <button
               type="button"
@@ -222,7 +198,7 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Add
             </button>
