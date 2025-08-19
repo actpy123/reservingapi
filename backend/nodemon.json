@@ -1,5 +1,0 @@
-{
-  "watch": ["src"],
-  "ext": "ts,json",
-  "exec": "ts-node -r ts-node/register/transpile-only -r tsconfig-paths/register -r module-alias/register src/app.ts"
-}
