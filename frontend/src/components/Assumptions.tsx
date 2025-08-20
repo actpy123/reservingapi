@@ -1,0 +1,195 @@
+import React, { useState, useEffect } from 'react';
+import { ApiService } from '../services/api';
+import type { Assumption } from '../services/api';
+
+const Assumptions: React.FC = () => {
+  const [assumptions, setAssumptions] = useState<Assumption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    loadAssumptions();
+  }, []);
+
+  const loadAssumptions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ApiService.getAssumptions();
+      setAssumptions(data);
+    } catch (err) {
+      setError('Failed to load assumptions');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.name.endsWith('.zip')) {
+      setSelectedFile(file);
+      setError(null);
+    } else {
+      setError('Please select a valid ZIP file');
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setError('Please select a file to upload');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    try {
+      const uploadedAssumptions = await ApiService.uploadAssumptions(selectedFile);
+      setAssumptions(uploadedAssumptions);
+      setSelectedFile(null);
+      const fileInput = document.getElementById('file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    } catch (err) {
+      setError('Failed to upload assumptions');
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const formatDataPreview = (data: any[]) => {
+    if (!data || data.length === 0) return 'No data';
+    const firstRow = data[0];
+    const columns = Object.keys(firstRow);
+    const previewRows = data.slice(0, 5);
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-xs">
+          <thead>
+            <tr className="bg-brand-50">
+              {columns.map((col) => (
+                <th key={col} className="px-2 py-1 text-left font-medium text-gray-700 border">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {previewRows.map((row, rowIndex) => (
+              <tr key={rowIndex} className="border-t">
+                {columns.map((col) => (
+                  <td key={col} className="px-2 py-1 border text-gray-600">
+                    {String(row[col] || '').substring(0, 20)}
+                    {String(row[col] || '').length > 20 ? '...' : ''}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {data.length > 5 && (
+          <p className="text-xs text-gray-500 mt-2">Showing first 5 rows of {data.length} total rows</p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assumptions Management</h1>
+          <div className="w-20 h-1 bg-accent-500"></div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Assumptions</h2>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="file-input" className="block text-sm font-medium text-gray-700 mb-2">
+              Select ZIP file containing CSV assumptions
+            </label>
+            <input
+              id="file-input"
+              type="file"
+              accept=".zip"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-50 file:text-accent-700 hover:file:bg-accent-100"
+            />
+          </div>
+          {selectedFile && (
+            <div className="text-sm text-gray-600">
+              Selected: <span className="font-medium">{selectedFile.name}</span>
+            </div>
+          )}
+          <button
+            onClick={handleUpload}
+            disabled={!selectedFile || uploading}
+            className="bg-accent-500 text-white px-6 py-2 rounded font-semibold hover:bg-accent-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {uploading ? 'Uploading...' : 'Upload Assumptions'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg border">
+        <div className="bg-brand-50 px-6 py-4">
+          <h2 className="text-xl font-semibold text-gray-900">Current Assumptions</h2>
+        </div>
+        
+        {loading ? (
+          <div className="p-6 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
+            <p className="mt-2 text-gray-600">Loading assumptions...</p>
+          </div>
+        ) : assumptions.length === 0 ? (
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
+              <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Assumptions Found</h3>
+            <p className="text-gray-500">Upload a ZIP file containing CSV assumptions to get started</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {assumptions.map((assumption, index) => (
+              <div key={assumption.assumptionId || index} className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">{assumption.name}</h3>
+                  <span className="text-sm text-gray-500">ID: {assumption.assumptionId}</span>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Data Preview</h4>
+                  {formatDataPreview(assumption.data)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Assumptions; 
