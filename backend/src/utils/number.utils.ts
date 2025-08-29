@@ -7,3 +7,10 @@ export function toNumber(value: any): number {
 
   return num;
 }
+
+export function percentToDecimal(value: string | number): number {
+  if (typeof value === 'string') {
+    return parseFloat(value) / 100;
+  }
+  return Number(value) / 100;
+}

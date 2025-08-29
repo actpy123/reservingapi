@@ -6,13 +6,10 @@ import { Request, Response } from 'express';
 import * as Papa from 'papaparse';
 import { parse } from 'path';
 import { Scenario } from '@CustomTypes/app.type';
-import {
-  complieInputs,
-  createPolicySummaryArray,
-  findProductByScenario,
-  loadRates,
-  normalizeProductPercents,
-} from '@libs/reserve.libs';
+import { complieInputs, createPolicySummaryArray, findProductByScenario, loadRates, normalizeProductPercents } from '@libs/reserve.libs';
+import { safeParseDate } from '@utils/date.utils';
+import { calcReserve } from '@libs/calc_reserve.lib';
+import { toNumber } from '@utils/number.utils';
 
 export async function getCurrentAssumptions(req: Request, res: Response) {
   // You could process files here or send them back
@@ -84,19 +81,26 @@ export async function reserveCalculator(req: Request, res: Response) {
     const ssvRates = loadRates(assumptions, product['SSV Table']);
     const maturityBenefitRates = loadRates(assumptions, product['Maturity Benefit Table']);
     const incomeSurvivalBenefitRates = loadRates(assumptions, product['Income_Survival Benefit Table']);
+    product['MAD FLAG'] = toNumber(product['MAD FLAG']);
+    let reserves = [];
 
-    for (const policyData of scenarios[0].data) {
+    for (const [index, policyData] of scenarios[0].data.entries()) {
       try {
-        const cleanPolicyData = complieInputs(policyData, product);
-        console.log(JSON.stringify(cleanPolicyData));
+        if (index === 0) {
+          const cleanPolicyData = complieInputs(policyData, product);
+          console.log(cleanPolicyData);
+          reserves = await calcReserve(cleanPolicyData, product, mortalityRates, mortalityBERates, morbidityRates, lapseRates, inflationRates, interestRates);
+        }
       } catch (error) {
+        console.log(error);
+
         skippedPolicies = skippedPolicies + 1;
       }
     }
 
     // You could process files here or send them back
     res.sendCustomResponse(200, {
-      data: { skippedPolicies, successfulPolicies },
+      data: reserves,
     });
   } catch (error: any) {
     console.log(error);

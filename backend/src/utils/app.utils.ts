@@ -68,3 +68,4 @@ export function getPremiumFrequencyValue(freq: string): number {
       return 0;
   }
 }
+
