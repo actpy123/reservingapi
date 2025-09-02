@@ -127,14 +127,14 @@ export function complieInputs(inputs: any, product: any) {
   compliedInputs.claimExpenseFixedVal = 55;
   compliedInputs.InterestAssump_BE = 0;
   compliedInputs.InterestAssump_Val = 0;
-  compliedInputs.resSolFactor = 0.045;
-  compliedInputs.sarSolFactor = 0.00045;
+  compliedInputs.resSolFactor = 0.03;
+  compliedInputs.sarSolFactor = 0.0003;
   compliedInputs.fixedRenewalExpVal = compliedInputs.renExpBE * compliedInputs.expenseMad;
 
   compliedInputs.fixedInitialExpBE = getAssumptionVal(product['Fixed Initial Exp BE'], compliedInputs.expenseMad, product['MAD FLAG']);
   compliedInputs.claimExpenseFixedVal = getAssumptionVal(product['Claim Expense Fixed BE'], compliedInputs.expenseMad, product['MAD FLAG']);
-  compliedInputs.lapseAssumpVal = getAssumptionVal(product['Lapse_Assumption_BE'], product['Lapse_MAD'], product['MAD FLAG']);
-  compliedInputs.morbAssumpVal = getAssumptionVal(product['Morbidity_Assumption_BE'], percentToDecimal(product['Morbidity_MAD']), parseInt(product['MAD FLAG']));
+  compliedInputs.lapseAssumpVal = percentToDecimal(getAssumptionVal(product['Lapse_Assumption_BE'], percentToDecimal(product['Lapse_MAD']), product['MAD FLAG']));
+  compliedInputs.morbAssumpVal = percentToDecimal(getAssumptionVal(product['Morbidity_Assumption_BE'], percentToDecimal(product['Morbidity_MAD']), parseInt(product['MAD FLAG'])));
 
   compliedInputs.policyEffectiveDate = safeParseDate(compliedInputs['policyEffectiveDate']);
   compliedInputs.maturityDate = safeParseDate(compliedInputs['maturityDate']);
