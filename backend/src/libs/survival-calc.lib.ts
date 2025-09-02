@@ -77,3 +77,23 @@ export function calcReservePerPolicy(reverse: any, inputs: any): number {
   }
   return 0;
 }
+
+export function calculateFinalReserve(inputs: any, reserve: any): number {
+  const { ptMonths, reserveType, uIN } = inputs;
+  const { upr, reservePerPolicy, duration } = reserve;
+  const cleanedReserveType = reserveType.replace(/\s+/g, '');
+  if (duration <= ptMonths) {
+    if (cleanedReserveType === 'GPV') {
+      return Math.max(reservePerPolicy, 0);
+    } else if (cleanedReserveType === 'UPR') {
+      return Math.max(upr, 0);
+    } else if (cleanedReserveType.replace(' ', '') === 'Max(GPV,UPR,0)') {
+      return Math.max(reservePerPolicy, upr, 0);
+    } else if (uIN === '163N003V01' || (uIN === '163N001V01' && ptMonths <= 12)) {
+      return Math.max(upr, 0);
+    } else {
+      return Math.max(reservePerPolicy, 0);
+    }
+  }
+  return 0;
+}

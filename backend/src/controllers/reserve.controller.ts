@@ -10,7 +10,7 @@ import { complieInputs, createPolicySummaryArray, findProductByScenario, loadRat
 import { calcReserve } from '@libs/calc_reserve.lib';
 import { percentToDecimal, toNumber } from '@utils/number.utils';
 import { generateLoanSchedule } from '@utils/loan.utils';
-import { calcReservePerPolicy, calculateValue } from '@libs/survival-calc.lib';
+import { calcReservePerPolicy, calculateFinalReserve, calculateValue } from '@libs/survival-calc.lib';
 
 export async function getCurrentAssumptions(req: Request, res: Response) {
   // You could process files here or send them back
@@ -90,7 +90,6 @@ export async function reserveCalculator(req: Request, res: Response) {
       try {
         // if (index === 0) {
         const cleanPolicyData = complieInputs(policyData, product);
-        console.log(cleanPolicyData);
         const loadSchedule = generateLoanSchedule(
           {
             policyTermMonths: cleanPolicyData.ptMonths,
@@ -117,13 +116,19 @@ export async function reserveCalculator(req: Request, res: Response) {
         );
 
         for (let i = reserves.length - 1; i >= 0; i--) {
-          const netCashflow = reserves[i + 1]?.netCashflow ?? 0;
-          const reserveVal = reserves[i + 1]?.reserves ?? 0;
-          const intialYieldRate = reserves[i + 1]?.intialYieldRate ?? 0;
-          reserves[i].reserves = (reserveVal - netCashflow) / (1 + intialYieldRate);
-          reserves[i].solvencyMargin = calculateValue(i, reserves, cleanPolicyData);
-          reserves[i].reservePerPolicy = calcReservePerPolicy(reserves[i], cleanPolicyData);
+          const nextReserve = reserves[i + 1] ?? {};
+          const netCashflow = nextReserve?.netCashflow ?? 0;
+          const reserveVal = nextReserve?.reserves ?? 0;
+          const intialYieldRate = nextReserve?.intialYieldRate ?? 0;
+          const currentReserve = reserves[i];
+          currentReserve.reserves = (reserveVal - netCashflow) / (1 + intialYieldRate);
+          currentReserve.solvencyMargin = calculateValue(i, reserves, cleanPolicyData);
+          currentReserve.reservePerPolicy = calcReservePerPolicy(currentReserve, cleanPolicyData);
+          currentReserve.finalReserve = calculateFinalReserve(cleanPolicyData, currentReserve);
+          currentReserve.svDeficiencyReserve = currentReserve.duration <= cleanPolicyData.ptMonths ? Math.max(currentReserve.surrenderBenefit - currentReserve.finalReserve, 0) : 0;
+          reserves[i] = currentReserve;
         }
+
         // }
 
         result.push(reserves);
