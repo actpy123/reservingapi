@@ -21,11 +21,14 @@ export async function calcReserve(
   for (let x = 1; x < inputs['ptMonths'] + 2; x++) {
     try {
       const reserve: any = {};
+      const month = ((x - 1) % 12) + 1;
+      const year = Math.floor((x - 1) / 12) + 1;
+      const age = Math.floor((x - 1) / 12) + 1;
 
       reserve.duration = x;
-      reserve.month = ((x - 1) % 12) + 1;
-      reserve.year = Math.floor((x - 1) / 12) + 1;
-      reserve.age = inputs.phEntryAge + (Math.floor((x - 1) / 12) + 1) - 1;
+      reserve.month = month;
+      reserve.year = year;
+      reserve.age = age;
       reserve.livesAtStart = calLivesStart(reserve, reserves, x);
       reserve.premiumFrequency = calcPremiumFrequency(reserve, inputs);
       reserve.premium = inputs.premium * reserve.livesAtStart * reserve.premiumFrequency;
