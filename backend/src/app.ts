@@ -16,7 +16,7 @@ const app = express();
 
 // Middleware setup
 app.use(compression({ level: 1 })); // Compress all responses with a compression level of 1 (lightweight compression)
-app.use(bodyParser.json()); // Parse incoming JSON request bodies
+app.use(bodyParser.json({ limit: '50mb' })); // Parse incoming JSON request bodies
 const port = process.env.PORT || 5000; // Set port from environment variable or default to 5000
 
 // Enable CORS (Cross-Origin Resource Sharing)
