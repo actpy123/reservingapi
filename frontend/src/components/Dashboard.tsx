@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ControlSheetForm from './ControlSheetForm';
-import Assumptions from './Assumptions';
+import Assumptions from '../pages/Assumptions.page';
 
 interface ControlSheet {
   id: string;
@@ -78,26 +78,53 @@ const Dashboard: React.FC = () => {
               </svg>
             </button>
           </div>
-          {!isSidebarCollapsed && (
-            <nav className="px-2 space-y-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('Assumptions')}
-                className={`${activeTab === 'Assumptions' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-full rounded-full px-3 py-3 text-left transition-colors`}
-                title="Assumptions"
-              >
-                Assumptions
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('Reserve Calculate')}
-                className={`${activeTab === 'Reserve Calculate' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-full rounded-full px-3 py-3 text-left transition-colors`}
-                title="Reserve Calculate"
-              >
-                Reserve Calculate
-              </button>
-            </nav>
-          )}
+          <nav className="px-2 space-y-2">
+            {!isSidebarCollapsed ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('Assumptions')}
+                  className={`${activeTab === 'Assumptions' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-full rounded-full px-3 py-3 text-left transition-colors`}
+                  title="Assumptions"
+                >
+                  Assumptions
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('Reserve Calculate')}
+                  className={`${activeTab === 'Reserve Calculate' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-full rounded-full px-3 py-3 text-left transition-colors`}
+                  title="Reserve Calculate"
+                >
+                  Reserve Calculate
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('Assumptions')}
+                  className={`${activeTab === 'Assumptions' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-10 h-10 rounded-full flex items-center justify-center transition-colors`}
+                  title="Assumptions"
+                  aria-label="Assumptions"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('Reserve Calculate')}
+                  className={`${activeTab === 'Reserve Calculate' ? 'bg-white text-brand-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-10 h-10 rounded-full flex items-center justify-center transition-colors`}
+                  title="Reserve Calculate"
+                  aria-label="Reserve Calculate"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </nav>
         </aside>
 
         {/* Main Content */}
@@ -110,12 +137,12 @@ const Dashboard: React.FC = () => {
                 {/* Page Title */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Control Sheet Entry</h1>
+                    <h1 className="text-bs font-bold text-gray-900 mb-2">Control Sheet Entry</h1>
                     <div className="w-20 h-1 bg-accent-500 rounded-full"></div>
                   </div>
                   <button
                     onClick={handleControlSheet}
-                    className="bg-accent-500 text-white px-6 py-3 rounded-full font-semibold shadow hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-300"
+                    className="bg-accent-500 text-white px-2 py-3 rounded-full font-semibold shadow hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-300"
                   >
                     + CONTROL SHEET ENTRY
                   </button>
@@ -124,7 +151,7 @@ const Dashboard: React.FC = () => {
                 {/* Table */}
                 <div className="bg-white rounded-xl border shadow-sm">
                   <div className="bg-brand-50 px-6 py-4 rounded-t-xl">
-                    <div className="grid grid-cols-9 gap-4 text-sm font-semibold text-gray-700">
+                    <div className="grid grid-cols-9 gap-4 text-bs font-semibold text-gray-700">
                       <div className="text-center">
                         <span>Run NO.</span>
                       </div>
@@ -159,7 +186,7 @@ const Dashboard: React.FC = () => {
                   {controlSheets.length === 0 && (
                     <div className="py-16 text-center">
                       <div className="w-16 h-16 mx-auto mb-4 text-brand-500"></div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Control Sheet Found</h3>
+                      <h3 className="text-bs font-semibold text-gray-900 mb-2">No Control Sheet Found</h3>
                       <p className="text-gray-500">To create reserver calculation please click on Create Control Sheet Entry</p>
                     </div>
                   )}
@@ -216,4 +243,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

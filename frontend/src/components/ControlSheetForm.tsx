@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useFileHandler } from '../hooks';
 
 interface ControlSheetFormProps {
   onSubmit: (data: any) => void;
@@ -10,14 +11,15 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
     serialNo: '',
     productCode: '',
     inputFilePath: '',
-    inputFile: null as File | null,
     assumptionsPath: '',
-    assumptionsFile: null as File | null,
     isRunFlagTrue: 'No',
     isDBFlag: 'No'
   });
 
-  const handleInputChange = (field: string, value: string | File | null) => {
+  const inputFileHandler = useFileHandler();
+  const assumptionsFileHandler = useFileHandler();
+
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -26,14 +28,11 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const handleFileChange = (field: string, file: File | null) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: file
-    }));
+    onSubmit({
+      ...formData,
+      inputFile: inputFileHandler.selectedFile,
+      assumptionsFile: assumptionsFileHandler.selectedFile,
+    });
   };
 
   return (
@@ -88,15 +87,18 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
                 Choose File
               </button>
               <span className="text-sm text-gray-500">
-                {formData.inputFile ? formData.inputFile.name : 'No file chosen'}
+                {inputFileHandler.selectedFile ? inputFileHandler.selectedFile.name : 'No file chosen'}
               </span>
             </div>
             <input
               id="inputFile"
               type="file"
-              onChange={(e) => handleFileChange('inputFile', e.target.files?.[0] || null)}
+              onChange={inputFileHandler.handleFileChange}
               className="hidden"
             />
+            {inputFileHandler.error && (
+              <p className="text-xs text-red-600 mt-1">{inputFileHandler.error}</p>
+            )}
           </div>
 
           {/* Assumptions Path */}
@@ -118,15 +120,18 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
                 Choose File
               </button>
               <span className="text-sm text-gray-500">
-                {formData.assumptionsFile ? formData.assumptionsFile.name : 'No file chosen'}
+                {assumptionsFileHandler.selectedFile ? assumptionsFileHandler.selectedFile.name : 'No file chosen'}
               </span>
             </div>
             <input
               id="assumptionsFile"
               type="file"
-              onChange={(e) => handleFileChange('assumptionsFile', e.target.files?.[0] || null)}
+              onChange={assumptionsFileHandler.handleFileChange}
               className="hidden"
             />
+            {assumptionsFileHandler.error && (
+              <p className="text-xs text-red-600 mt-1">{assumptionsFileHandler.error}</p>
+            )}
           </div>
 
           {/* Run Indicator */}
