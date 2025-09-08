@@ -76,6 +76,7 @@ export function normalizeProductPercents(product: Record<string, any>) {
     product['ApplyMortality'] = parseInt(product['ApplyMortality']);
     product['ApplyMorbidity'] = parseInt(product['ApplyMorbidity']);
   });
+  product
   return product;
 }
 

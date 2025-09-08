@@ -14,46 +14,67 @@ export async function calcReserve(
   gsvRates: any[],
   ssvRates: any[]
 ) {
-  const decrements = [];
   const reserves = [];
-  const finacialFactors = [];
+  const { phEntryAge, ptMonths, pptMonths, premFq, premium, phGender, mortalityMad, morbAssumpVal, lapseAssumpVal } = inputs;
+  const { ApplyMortality, ApplyMorbidity, ApplyLapse } = product;
 
-  for (let x = 1; x < inputs['ptMonths'] + 2; x++) {
+  for (let duration = 1; duration < ptMonths + 2; duration++) {
     try {
-      const reserve: any = {};
-      const month = ((x - 1) % 12) + 1;
-      const year = Math.floor((x - 1) / 12) + 1;
-      const age = Math.floor((x - 1) / 12) + 1;
+      const month = ((duration - 1) % 12) + 1;
+      const year = Math.floor((duration - 1) / 12) + 1;
+      const age = phEntryAge + Math.floor((duration - 1) / 12) + 1;
+      const livesAtStart = month === 1 && year === 1 ? 1 : reserves[duration - 2]?.livesAtEnd ?? 1;
+      const premiumFrequency = duration > pptMonths ? 0 : month === 1 + (12 / premFq) * Math.floor((premFq * (month - 1)) / 12) ? 1 : 0;
+      const reservePremium = premium * livesAtStart * premiumFrequency;
+      const cumulativePremium = calcCumulatedPremium([...reserves, { premium: reservePremium }]);
+      const mortalityRate = calculateMortalityRate(age, phGender, mortalityMad, ApplyMortality, mortalityRates, mortalityBERates);
+      const morbidityRate = calculateMorbidityRate(age, phGender, morbAssumpVal, ApplyMorbidity, morbidityRates);
+      const lapseRate = calculateLapse(month, year, phGender, lapseAssumpVal, lapseRates, ApplyLapse);
+      const mortalityYear = mortalityRate * livesAtStart * (1 - 0.5 * morbidityRate);
+      const morbidityYear = morbidityRate * livesAtStart * (1 - 0.5 * mortalityRate);
+      const lapseYear = lapseRate * (livesAtStart - mortalityYear - morbidityYear);
+      const livesAtEnd = livesAtStart - mortalityYear - morbidityYear - lapseYear;
 
-      reserve.duration = x;
-      reserve.month = month;
-      reserve.year = year;
-      reserve.age = age;
-      reserve.livesAtStart = calLivesStart(reserve, reserves, x);
-      reserve.premiumFrequency = calcPremiumFrequency(reserve, inputs);
-      reserve.premium = inputs.premium * reserve.livesAtStart * reserve.premiumFrequency;
+      const inflationFactor =
+        month === 1 && year === 1
+          ? 1
+          : month > 1
+          ? reserves[duration - 2].inflationFactor
+          : reserves[duration - 2].inflationFactor * (1 + parseFloat(inflationRates[year - 1].Reserving));
 
-      reserve.cumulativePremium = calcCumulatedPremium([...reserves, reserve]);
+      const intialYieldRate = Math.pow(1 + parseFloat(interestRates[year - 1].Reserving), 1 / 12) - 1;
 
-      reserve.mortalityRate = calculateMortalityRate(reserve.age, inputs.phGender, inputs.mortalityMad, product['ApplyMortality'], mortalityRates, mortalityBERates);
-      reserve.morbidityRate = calculateMorbidityRate(reserve.age, inputs.phGender, inputs.morbAssumpVal, product['ApplyMorbidity'], morbidityRates);
-      reserve.lapseRate = calculateLapse(reserve.month, reserve.year, inputs.phGender, inputs.lapseAssumpVal, lapseRates, product['ApplyLapse']);
-
-      reserve.mortalityYear = reserve.mortalityRate * reserve.livesAtStart * (1 - 0.5 * reserve.morbidityRate);
-      reserve.morbidityYear = reserve.morbidityRate * reserve.livesAtStart * (1 - 0.5 * reserve.mortalityRate);
-      reserve.lapseYear = reserve.lapseRate * (reserve.livesAtStart - reserve.mortalityYear - reserve.morbidityYear);
-      reserve.livesAtEnd = reserve.livesAtStart - reserve.mortalityYear - reserve.morbidityYear - reserve.lapseYear;
-      reserve.inflationFactor = calcInflationFactor(reserve, reserves, x, inflationRates);
-      reserve.intialYieldRate = calcInitialYieldRate(reserve, interestRates);
+      const reserve: any = {
+        duration: duration,
+        month: month,
+        year: year,
+        age: age,
+        livesAtStart: livesAtStart,
+        premiumFrequency: premiumFrequency,
+        premium: reservePremium,
+        cumulativePremium: cumulativePremium,
+        mortalityRate: mortalityRate,
+        morbidityRate: mortalityRate,
+        lapseRate: lapseRate,
+        mortalityYear,
+        morbidityYear,
+        lapseYear,
+        livesAtEnd,
+        inflationFactor,
+        intialYieldRate,
+      };
 
       reserve.FYCommission = reserve.premium * (reserve.year === 1 ? percentToDecimal(inputs.firstYearCommissionFyc) ?? 0 : percentToDecimal(inputs.renewalCommissionRc) ?? 0);
       reserve.initialExpense =
-        x >= (inputs.ptMonths ?? 0) + 1 ? 0 : reserve.premium * (reserve.year === 1 ? inputs.varExpInitialBE ?? 0 : 0) + (x === 1 ? inputs.fixedInitialExpBE ?? 0 : 0);
+        duration >= (inputs.ptMonths ?? 0) + 1
+          ? 0
+          : reserve.premium * (reserve.year === 1 ? inputs.varExpInitialBE ?? 0 : 0) + (duration === 1 ? inputs.fixedInitialExpBE ?? 0 : 0);
 
-      reserve.renewalVariableExp = x >= (inputs.ptMonths ?? 0) + 1 ? 0 : reserve.year !== 1 ? (product.renewalPremExp ?? 0) * reserve.premium : 0;
-      reserve.renewalFixedExp = x <= inputs.ptMonths ? (x === 1 ? 0 : (inputs.fixedRenewalExpVal ?? 0) / 12) * (reserve.inflationFactor ?? 0) * (reserve.livesAtStart ?? 0) : 0;
+      reserve.renewalVariableExp = duration >= (inputs.ptMonths ?? 0) + 1 ? 0 : reserve.year !== 1 ? (product.renewalPremExp ?? 0) * reserve.premium : 0;
+      reserve.renewalFixedExp =
+        duration <= inputs.ptMonths ? (duration === 1 ? 0 : (inputs.fixedRenewalExpVal ?? 0) / 12) * (reserve.inflationFactor ?? 0) * (reserve.livesAtStart ?? 0) : 0;
       reserve.claimExpense =
-        x <= inputs.ptMonths
+        duration <= inputs.ptMonths
           ? inputs.claimExpenseFixedVal *
             reserve.inflationFactor *
             (reserve.mortalityYear * (inputs.hasDeathBenefit === '0' ? 0 : 1) + reserve.morbidityYear * (inputs.hasMorbidityBenefit === '0' ? 0 : 1))
@@ -62,21 +83,21 @@ export async function calcReserve(
       reserve.deathBenefit = calculateDeathBenefit(
         inputs.hasDeathBenefit,
         inputs.sumAssured,
-        loadSchedule[x - 1].openingBalance,
+        loadSchedule[duration - 1].openingBalance,
         parseFloat(inputs.percentageofpremspaidDeath),
         reserve.cumulativePremium,
         inputs.multipleofanualisedpremiumDeath,
         inputs.anualisedPremium
       );
 
-      reserve.deathOutGo = x <= inputs.ptMonths ? reserve.mortalityYear * reserve.deathBenefit : 0;
+      reserve.deathOutGo = duration <= inputs.ptMonths ? reserve.mortalityYear * reserve.deathBenefit : 0;
       reserve.morbidityBenefit = calculateMorbidityBenefit(inputs, reserve.cumulativePremium, reserve.annualisedPremium);
       reserve.morbidityOutGo = reserve.morbidityBenefit * reserve.mortalityYear;
 
       reserve.gsvFactor = inputs.hasSurrenderBenefit === '2' ? percentToDecimal(gsvRates[reserve.year - 1][Math.ceil(inputs.ptMonths / 12) - 1 + 2]) : 0;
       reserve.guaranteedSurrenderValue = reserve.cumulativePremium * reserve.gsvFactor;
       reserve.ssvFactor = inputs.hasSurrenderBenefit === '2' ? percentToDecimal(ssvRates[reserve.year - 1][Math.ceil(inputs.ptMonths / 12) - 1 + 2]) : 0;
-      reserve.specialSurrenderValue = inputs.sumAssured * reserve.ssvFactor * Math.min(1, x / inputs.ptMonths);
+      reserve.specialSurrenderValue = inputs.sumAssured * reserve.ssvFactor * Math.min(1, duration / inputs.ptMonths);
       reserve.surrenderBenefit = calculateSurrenderBenefit(inputs, reserve);
       reserve.surrenderOutgo = reserve.lapseYear * reserve.surrenderBenefit;
       reserve.survivalMultiplier = calcSurvivalMultiplier(reserve, inputs);
@@ -87,7 +108,7 @@ export async function calcReserve(
         reserve.survivalMultiplier;
 
       reserve.survivalOutgo = reserve.livesAtStart * reserve.survivalBenefit;
-      reserve.maturityBenefitFactor = x === inputs.ptMonths + 1 ? inputs.maturityBenefitFactor : 0;
+      reserve.maturityBenefitFactor = duration === inputs.ptMonths + 1 ? inputs.maturityBenefitFactor : 0;
       reserve.maturityBenefit = calculateMaturityBenefit(inputs, reserve);
       reserve.maturityOutgo = reserve.livesAtStart * reserve.maturityBenefit;
       reserve.investmentIncome = (reserve.premium - reserve.FYCommission - reserve.initialExpense - reserve.renewalVariableExp - reserve.renewalFixedExp) * reserve.intialYieldRate;
@@ -132,41 +153,6 @@ function calculateMorbidityRate(age: number, gender: string, morbAssumpVal: numb
 
 function calculateLapse(currentMonth: number, year: number, gender: string, lapseAssumpVal: number, lapseTableGrad: any, applyLapse: number) {
   return currentMonth === 12 ? lapseTableGrad[year][gender] * lapseAssumpVal : 0 * applyLapse;
-}
-
-function calLivesStart(reserve: any, reserves: any[], x: number): number {
-  if (reserve.month === 1 && reserve.year === 1) {
-    return 1;
-  }
-  const prevItem = reserves[x - 2];
-  return prevItem?.livesAtEnd ?? 1;
-}
-
-function calcInflationFactor(reserve: any, reserves: any[], x: number, inflationRates: any) {
-  if (reserve.month === 1 && reserve.year === 1) {
-    return 1;
-  }
-  const previousInflationFactor = reserves[x - 2].inflationFactor;
-  if (reserve.month > 1) {
-    return previousInflationFactor;
-  } else {
-    return previousInflationFactor * (1 + parseFloat(inflationRates[reserve.year - 1].Reserving));
-  }
-}
-
-function calcInitialYieldRate(reserve: any, interestRateTable: any) {
-  return Math.pow(1 + parseFloat(interestRateTable[reserve.year - 1].Reserving), 1 / 12) - 1;
-}
-
-function calcPremiumFrequency(reserve: any, inputs: any): number {
-  const { duration, month } = reserve;
-  const { pptMonths, premFq } = inputs;
-
-  if (duration > pptMonths) {
-    return 0;
-  }
-  const condition = month === 1 + (12 / premFq) * Math.floor((premFq * (month - 1)) / 12);
-  return condition ? 1 : 0;
 }
 
 function calcCumulatedPremium(reserves: any[]) {
