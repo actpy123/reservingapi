@@ -12,6 +12,7 @@ import { toNumber } from '@utils/number.utils';
 import { resolve } from 'path';
 import Piscina from 'piscina';
 import { ReserveResultModel } from '@models/reserve-result.model';
+import { any } from 'zod';
 
 console.log(resolve(process.cwd(), 'src/workers/reserve-calculator.worker.js'));
 
@@ -81,6 +82,7 @@ export async function reserveCalculator(req: Request, res: Response) {
   let skippedPolicies = 0;
   let successfulPolicies = 0;
   let reserveResultId;
+
   try {
     let product = findProductByScenario(assumptions, scenarios[0].scenarioCode);
     product = normalizeProductPercents(product);
@@ -121,15 +123,27 @@ export async function reserveCalculator(req: Request, res: Response) {
     skippedPolicies += rejected.length;
     successfulPolicies += finalReserves.length;
 
+    const cashflowResult = new Array(1201);
+    finalReserves.forEach((item: any) => {
+      item.cashFlows.forEach((cashflowItem: any, index: number) => {
+        for (const [key, value] of Object.entries(cashflowItem)) {
+          cashflowResult[index] = cashflowResult[index] ?? {};
+          cashflowResult[index][key] = (cashflowResult[index][key] ?? 0) + value;
+        }
+      });
+    });
+
     const reserveResult = new ReserveResultModel({
       scenarioCode: scenarios[0].scenarioCode,
       assumptionId,
-      output: finalReserves,
+      output: finalReserves.map((item) => item.output),
+      cashflow: cashflowResult.filter(Boolean),
     });
-
-    await reserveResult.save();
     reserveResultId = reserveResult._id;
+    await reserveResult.save();
   } catch (error: any) {
+    console.log(error);
+
     skippedPolicies += 1;
   }
 
@@ -138,6 +152,7 @@ export async function reserveCalculator(req: Request, res: Response) {
       skippedPolicies,
       successfulPolicies,
       outputFile: `http://localhost:3000/reserve/download/output/${reserveResultId}`,
+      cashflows: `http://localhost:3000/reserve/download/cashflow/${reserveResultId}`,
     },
   });
 }

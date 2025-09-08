@@ -22,7 +22,7 @@ export async function calcReserve(
     try {
       const month = ((duration - 1) % 12) + 1;
       const year = Math.floor((duration - 1) / 12) + 1;
-      const age = phEntryAge + Math.floor((duration - 1) / 12) + 1;
+      const age = phEntryAge + year - 1;
       const livesAtStart = month === 1 && year === 1 ? 1 : reserves[duration - 2]?.livesAtEnd ?? 1;
       const premiumFrequency = duration > pptMonths ? 0 : month === 1 + (12 / premFq) * Math.floor((premFq * (month - 1)) / 12) ? 1 : 0;
       const reservePremium = premium * livesAtStart * premiumFrequency;
