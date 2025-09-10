@@ -6,13 +6,15 @@ import { Request, Response } from 'express';
 import * as Papa from 'papaparse';
 import { parse } from 'path';
 import { Scenario } from '@CustomTypes/app.type';
-import {
-  complieInputs,
-  createPolicySummaryArray,
-  findProductByScenario,
-  loadRates,
-  normalizeProductPercents,
-} from '@libs/reserve.libs';
+import { findProductByScenario, loadRates, normalizeProductPercents } from '@libs/reserve.libs';
+import { toNumber } from '@utils/number.utils';
+
+import { resolve } from 'path';
+import Piscina from 'piscina';
+import { ReserveResultModel } from '@models/reserve-result.model';
+import { any } from 'zod';
+
+console.log(resolve(process.cwd(), 'src/workers/reserve-calculator.worker.js'));
 
 export async function getCurrentAssumptions(req: Request, res: Response) {
   // You could process files here or send them back
@@ -50,12 +52,14 @@ export async function uploadAssumptions(req: Request, res: Response) {
         assumptions.push({ name: assumptionName, data: result.data, assumptionId });
       }
     }
+    cache.set('assumptionId', assumptionId);
     cache.set('assumptions', assumptions);
     const saved = await AssumptionModel.insertMany(assumptions);
 
     res.sendCustomResponse(200, {
       message: 'Files uploaded and stored in memory.',
       data: {
+        assumptionId,
         files: assumptions,
       },
     });
@@ -65,12 +69,20 @@ export async function uploadAssumptions(req: Request, res: Response) {
   }
 }
 
+const piscina = new Piscina({
+  filename: resolve(process.cwd(), 'src/workers/reserve-calculator.worker.ts'), // adjust path
+  maxThreads: 8,
+});
+
 export async function reserveCalculator(req: Request, res: Response) {
   const scenarios: Scenario[] = req.body;
   const assumptions: any = await cache.get('assumptions');
-  const policySummaries = createPolicySummaryArray(1201);
+  const assumptionId: any = await cache.get('assumptionId');
+  // const policySummaries = createPolicySummaryArray(1201);
   let skippedPolicies = 0;
   let successfulPolicies = 0;
+  let reserveResultId;
+
   try {
     let product = findProductByScenario(assumptions, scenarios[0].scenarioCode);
     product = normalizeProductPercents(product);
@@ -84,25 +96,63 @@ export async function reserveCalculator(req: Request, res: Response) {
     const ssvRates = loadRates(assumptions, product['SSV Table']);
     const maturityBenefitRates = loadRates(assumptions, product['Maturity Benefit Table']);
     const incomeSurvivalBenefitRates = loadRates(assumptions, product['Income_Survival Benefit Table']);
+    product['MAD FLAG'] = toNumber(product['MAD FLAG']);
 
-    for (const policyData of scenarios[0].data) {
-      try {
-        const cleanPolicyData = complieInputs(policyData, product);
-        console.log(JSON.stringify(cleanPolicyData));
-      } catch (error) {
-        skippedPolicies = skippedPolicies + 1;
-      }
-    }
+    const promises = scenarios[0].data.map((policyData: any) =>
+      piscina.run({
+        policyData,
+        product,
+        incomeSurvivalBenefitRates,
+        maturityBenefitRates,
+        mortalityRates,
+        mortalityBERates,
+        morbidityRates,
+        lapseRates,
+        inflationRates,
+        interestRates,
+        gsvRates,
+        ssvRates,
+      })
+    );
 
-    // You could process files here or send them back
-    res.sendCustomResponse(200, {
-      data: { skippedPolicies, successfulPolicies },
+    const results = await Promise.allSettled(promises);
+
+    const finalReserves = results.filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled').map((r) => r.value);
+    const rejected = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+
+    skippedPolicies += rejected.length;
+    successfulPolicies += finalReserves.length;
+
+    const cashflowResult = new Array(1201);
+    finalReserves.forEach((item: any) => {
+      item.cashFlows.forEach((cashflowItem: any, index: number) => {
+        for (const [key, value] of Object.entries(cashflowItem)) {
+          cashflowResult[index] = cashflowResult[index] ?? {};
+          cashflowResult[index][key] = (cashflowResult[index][key] ?? 0) + value;
+        }
+      });
     });
+
+    const reserveResult = new ReserveResultModel({
+      scenarioCode: scenarios[0].scenarioCode,
+      assumptionId,
+      output: finalReserves.map((item) => item.output),
+      cashflow: cashflowResult.filter(Boolean),
+    });
+    reserveResultId = reserveResult._id;
+    await reserveResult.save();
   } catch (error: any) {
     console.log(error);
 
-    res.sendCustomResponse(400, {
-      message: error.message,
-    });
+    skippedPolicies += 1;
   }
+
+  res.sendCustomResponse(200, {
+    data: {
+      skippedPolicies,
+      successfulPolicies,
+      outputFile: `http://localhost:3000/reserve/download/output/${reserveResultId}`,
+      cashflows: `http://localhost:3000/reserve/download/cashflow/${reserveResultId}`,
+    },
+  });
 }

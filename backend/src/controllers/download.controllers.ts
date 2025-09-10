@@ -1,0 +1,61 @@
+import { AssumptionModel } from '@models/assumption.model';
+import { ReserveResultModel } from '@models/reserve-result.model';
+import { Request, Response } from 'express';
+import * as Papa from 'papaparse';
+import dayjs from 'dayjs';
+
+export async function downloadOutput(req: Request, res: Response) {
+  const { id } = req.params;
+
+  const results = await ReserveResultModel.findOne({ _id: id }).lean();
+  if (results && results.output) {
+    const productData = await AssumptionModel.findOne({ assumptionId: results?.assumptionId, name: 'product_master' }).lean();
+    // Convert first dataset
+    if (productData && productData?.data) {
+      const product = productData?.data.find((item: any) => {
+        return item['Scenario Code'] === results.scenarioCode;
+      });
+      const productCsv = Papa.unparse([product]);
+
+      const output = Papa.unparse(results.output);
+
+      const finalCsv = `${productCsv}\n\n${output}`;
+      const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss');
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`${results.scenarioCode}_${timestamp}_Reserve_Output.csv`); // filename
+      res.send(finalCsv);
+      return;
+    }
+  }
+  res.sendCustomResponse(200, {
+    message: 'Files do not exist.',
+  });
+}
+
+export async function downloadCashflow(req: Request, res: Response) {
+  const { id, policyNo } = req.params;
+
+  const results = await ReserveResultModel.findOne({ _id: id }).lean();
+  if (results && results.cashflow) {
+    const productData = await AssumptionModel.findOne({ assumptionId: results?.assumptionId, name: 'product_master' }).lean();
+    // Convert first dataset
+    if (productData && productData?.data) {
+      const product = productData?.data.find((item: any) => {
+        return item['Scenario Code'] === results.scenarioCode;
+      });
+      const productCsv = Papa.unparse([product]);
+
+      const output = Papa.unparse(results.cashflow);
+
+      const finalCsv = `${productCsv}\n\n${output}`;
+      const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss');
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`${results.scenarioCode}_${timestamp}_CF_Summary.csv`); // filename
+      res.send(finalCsv);
+      return;
+    }
+  }
+  res.sendCustomResponse(200, {
+    message: 'Files do not exist.',
+  });
+}

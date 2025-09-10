@@ -1,6 +1,7 @@
 import { Assumption, PolicySummary } from '@CustomTypes/app.type';
 import { getPremiumFrequencyValue, parsePercent, toVariableName } from '@utils/app.utils';
-import { toNumber } from '@utils/number.utils';
+import { safeParseDate } from '@utils/date.utils';
+import { percentToDecimal, toNumber } from '@utils/number.utils';
 
 export function createPolicySummaryArray(length: number): PolicySummary[] {
   const initialPolicySummary: PolicySummary = {
@@ -72,19 +73,25 @@ export function normalizeProductPercents(product: Record<string, any>) {
     if (field in product) {
       product[field] = parsePercent(product[field]);
     }
+    product['ApplyMortality'] = parseInt(product['ApplyMortality']);
+    product['ApplyMorbidity'] = parseInt(product['ApplyMorbidity']);
   });
+  product
   return product;
 }
 
 function getAssumptionVal(assumptionBE: number | string, mad: number, madFlag: number): number {
   if (typeof assumptionBE === 'string') {
-    return 0;
+    assumptionBE = parseFloat(assumptionBE);
+    if (isNaN(assumptionBE)) {
+      return 0;
+    }
   }
   return madFlag === 1 ? assumptionBE * mad : assumptionBE;
 }
 
 export function complieInputs(inputs: any, product: any) {
-  const keyToIgnore: string[] = ['Policy Term_Month', 'Premium Term_Month', 'Premium Frequency'];
+  const keyToIgnore: string[] = ['Policy Term_Month', 'Premium Term_Month', 'Premium Frequency', 'Coverage Effective date'];
   const productkeyToIgnore: string[] = [
     'Fixed Initial Exp BE',
     'Fixed Renewal Exp BE',
@@ -107,31 +114,32 @@ export function complieInputs(inputs: any, product: any) {
   for (const key of productKeys) {
     compliedInputs[toVariableName(key)] = product[key];
   }
-  compliedInputs.ptMonth = toNumber(inputs['Policy Term_Month']);
-  compliedInputs.pptMonth = toNumber(inputs['Premium Term_Month']);
+
+  compliedInputs.policyEffectiveDate = inputs['Coverage Effective date'];
+  compliedInputs.ptMonths = toNumber(inputs['Policy Term_Month']);
+  compliedInputs.pptMonths = toNumber(inputs['Premium Term_Month']);
   compliedInputs.premFq = getPremiumFrequencyValue(inputs['Premium Frequency']);
 
-  compliedInputs.fixedExpBE = toNumber(product['Fixed Initial Exp BE']);
   compliedInputs.renExpBE = toNumber(product['Fixed Renewal Exp BE']);
-  compliedInputs.varExpInitialBE = toNumber(product['Initial(%of Prem) Exp']);
+  compliedInputs.varExpInitialBE = percentToDecimal(product['Initial(%of Prem) Exp']);
+  compliedInputs.expenseMad = percentToDecimal(compliedInputs.expenseMad);
   compliedInputs.lapseAssumpBE = toNumber(product['Lapse_Assumption_BE']);
   compliedInputs.morbAssumpBE = toNumber(product['Morbidity_Assumption_BE']);
   compliedInputs.claimExpenseFixedVal = 55;
   compliedInputs.InterestAssump_BE = 0;
   compliedInputs.InterestAssump_Val = 0;
-  compliedInputs.resSolFactor = 0.045;
-  compliedInputs.sarSolFactor = 0.00045;
+  compliedInputs.resSolFactor = 0.03;
+  compliedInputs.sarSolFactor = 0.0003;
+  compliedInputs.fixedRenewalExpVal = compliedInputs.renExpBE * compliedInputs.expenseMad;
 
-  compliedInputs.lapseAssumpVal = getAssumptionVal(
-    product['Lapse_Assumption_BE'],
-    product['Lapse_MAD'],
-    product['MAD FLAG']
-  );
-  compliedInputs.lapseAssumpVal = getAssumptionVal(
-    product['Morbidity_Assumption_BE'],
-    product['Morbidity_MAD'],
-    product['MAD FLAG']
-  );
+  compliedInputs.fixedInitialExpBE = getAssumptionVal(product['Fixed Initial Exp BE'], compliedInputs.expenseMad, product['MAD FLAG']);
+  compliedInputs.claimExpenseFixedVal = getAssumptionVal(product['Claim Expense Fixed BE'], compliedInputs.expenseMad, product['MAD FLAG']);
+  compliedInputs.lapseAssumpVal = percentToDecimal(getAssumptionVal(product['Lapse_Assumption_BE'], percentToDecimal(product['Lapse_MAD']), product['MAD FLAG']));
+  compliedInputs.morbAssumpVal = percentToDecimal(getAssumptionVal(product['Morbidity_Assumption_BE'], percentToDecimal(product['Morbidity_MAD']), parseInt(product['MAD FLAG'])));
+
+  compliedInputs.policyEffectiveDate = safeParseDate(compliedInputs['policyEffectiveDate']);
+  compliedInputs.maturityDate = safeParseDate(compliedInputs['maturityDate']);
+  compliedInputs.policyTermDuration = Math.abs(compliedInputs.maturityDate.diff(compliedInputs.policyEffectiveDate, 'month'));
 
   return compliedInputs;
 }
