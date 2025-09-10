@@ -1,64 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ApiService } from '../services/api';
-import type { Assumption } from '../services/api';
+import { useAsyncEffect, useFileHandler, useFileUpload } from '../hooks';
 
 const Assumptions: React.FC = () => {
-  const [assumptions, setAssumptions] = useState<Assumption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    loadAssumptions();
-  }, []);
-
-  const loadAssumptions = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ApiService.getAssumptions();
-      setAssumptions(data);
-    } catch (err) {
-      setError('Failed to load assumptions');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const { data: assumptions, loading, error: loadError, refetch } = useAsyncEffect(
+    () => ApiService.getAssumptions(),
+    []
+  );
+  
+  const { selectedFile, error: fileError, handleFileChange, clearFile } = useFileHandler(['.zip']);
+  
+  const { upload, uploading, error: uploadError } = useFileUpload(
+    ApiService.uploadAssumptions,
+    {
+      clearFileOnSuccess: true,
+      onSuccess: async () => {
+        await refetch();
+      }
     }
-  };
+  );
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.name.endsWith('.zip')) {
-      setSelectedFile(file);
-      setError(null);
-    } else {
-      setError('Please select a valid ZIP file');
-      setSelectedFile(null);
-    }
-  };
+  const error = loadError || fileError || uploadError;
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      setError('Please select a file to upload');
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-    try {
-      const uploadedAssumptions = await ApiService.uploadAssumptions(selectedFile);
-      setAssumptions(uploadedAssumptions);
-      setSelectedFile(null);
-      const fileInput = document.getElementById('file-input') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    } catch (err) {
-      setError('Failed to upload assumptions');
-      console.error(err);
-    } finally {
-      setUploading(false);
-    }
-  };
+  const handleUpload = () => upload(selectedFile, clearFile);
 
   const formatDataPreview = (data: any[]) => {
     if (!data || data.length === 0) return 'No data';
@@ -101,16 +65,16 @@ const Assumptions: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Assumptions Management</h1>
+          <h1 className="text-bs font-bold text-gray-900 mb-2">Assumptions Management</h1>
           <div className="w-20 h-1 bg-accent-500"></div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Assumptions</h2>
+        <h2 className="text-xs font-semibold text-gray-900 mb-4">Upload Assumptions</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="file-input" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="file-input" className="block text-xs font-medium text-gray-700 mb-2">
               Select ZIP file containing CSV assumptions
             </label>
             <input
@@ -122,7 +86,7 @@ const Assumptions: React.FC = () => {
             />
           </div>
           {selectedFile && (
-            <div className="text-sm text-gray-600">
+            <div className="text-xs text-gray-600">
               Selected: <span className="font-medium">{selectedFile.name}</span>
             </div>
           )}
@@ -145,7 +109,7 @@ const Assumptions: React.FC = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
+              <p className="text-xs text-red-800">{error}</p>
             </div>
           </div>
         </div>
@@ -153,7 +117,7 @@ const Assumptions: React.FC = () => {
 
       <div className="bg-white rounded-lg border">
         <div className="bg-brand-50 px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">Current Assumptions</h2>
+          <h2 className="text-xs font-semibold text-gray-900">Current Assumptions</h2>
         </div>
         
         {loading ? (
@@ -161,7 +125,7 @@ const Assumptions: React.FC = () => {
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
             <p className="mt-2 text-gray-600">Loading assumptions...</p>
           </div>
-        ) : assumptions.length === 0 ? (
+        ) : !assumptions || assumptions.length === 0 ? (
           <div className="p-6 text-center">
             <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
               <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,11 +137,11 @@ const Assumptions: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {assumptions.map((assumption, index) => (
+            {assumptions?.map((assumption, index) => (
               <div key={assumption.assumptionId || index} className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{assumption.name}</h3>
-                  <span className="text-sm text-gray-500">ID: {assumption.assumptionId}</span>
+                  <h3 className="text-xs font-medium text-gray-900">{assumption.name}</h3>
+                  <span className="text-xs text-gray-500">ID: {assumption.assumptionId}</span>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Data Preview</h4>
