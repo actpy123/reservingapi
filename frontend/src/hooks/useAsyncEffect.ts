@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/**
- * useAsyncEffect - handles async operations in useEffect with loading/error states
- */
 export function useAsyncEffect<T>(
   asyncFn: () => Promise<T>,
   deps: React.DependencyList = []

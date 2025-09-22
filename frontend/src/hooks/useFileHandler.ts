@@ -1,14 +1,11 @@
 import { useCallback, useState } from 'react';
 
-/**
- * useFileHandler - handles file selection and validation
- */
 export function useFileHandler(allowedExtensions?: string[]) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
+    const file = event.target.files?.[0];
     setError(null);
 
     if (!file) {
@@ -16,17 +13,11 @@ export function useFileHandler(allowedExtensions?: string[]) {
       return;
     }
 
-    // Validate file extension if restrictions provided
-    if (allowedExtensions && allowedExtensions.length > 0) {
-      const fileExtension = file.name.toLowerCase().split('.').pop();
-      const isValidExtension = allowedExtensions.some(ext => 
-        ext.toLowerCase().replace('.', '') === fileExtension
-      );
-
-      if (!isValidExtension) {
-        setError(`Please select a valid file. Allowed: ${allowedExtensions.join(', ')}`);
+    if (allowedExtensions?.length) {
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        setError(`Invalid file type. Allowed types: ${allowedExtensions.join(', ')}`);
         setSelectedFile(null);
-        event.target.value = ''; // Clear input
         return;
       }
     }
@@ -39,12 +30,12 @@ export function useFileHandler(allowedExtensions?: string[]) {
     setError(null);
   }, []);
 
-  return { 
-    selectedFile, 
-    error, 
-    handleFileChange, 
+  return {
+    selectedFile,
+    error,
+    handleFileChange,
     clearFile,
-    hasFile: !!selectedFile 
+    hasFile: !!selectedFile
   } as const;
 }
 
