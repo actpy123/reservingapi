@@ -13,7 +13,7 @@ export const loadRoutes = (app: Express, routesPath: string) => {
       if (routeModule.default) {
         // Extract route name from file name (e.g., 'user.route.ts' -> 'user')
         const routeName = file.split('.')[0];
-        const basePath = `/${routeName}`;
+        const basePath = `/api/${routeName}`;
 
         app.use(basePath, routeModule.default);
       }
