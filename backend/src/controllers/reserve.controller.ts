@@ -68,9 +68,10 @@ export async function uploadAssumptions(req: Request, res: Response) {
 }
 
 const piscina = new Piscina({
-  filename: resolve(process.cwd(), 'src/workers/reserve-calculator.worker.ts'), // adjust path
+  filename:
+    process.env.NODE_ENV === 'local' ? resolve(process.cwd(), 'src/workers/reserve-calculator.worker.ts') : resolve(process.cwd(), 'dist/workers/reserve-calculator.worker.js'),
   maxThreads: 8,
-  execArgv: ['-r', 'ts-node/register/transpile-only', '-r', 'tsconfig-paths/register'],
+  execArgv: process.env.NODE_ENV === 'local' ? ['-r', 'ts-node/register/transpile-only', '-r', 'tsconfig-paths/register'] : [],
 });
 
 export async function reserveCalculator(req: Request, res: Response) {
