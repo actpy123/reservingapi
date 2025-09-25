@@ -1,3 +1,3 @@
-import path from "path";
+import path from 'path';
 
-export const ROUTES_PATH = path.join(process.cwd(), "src/routes");
+export const ROUTES_PATH = path.join(process.cwd(), '/routes');

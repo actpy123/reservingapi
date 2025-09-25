@@ -11,13 +11,12 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
     serialNo: '',
     productCode: '',
     inputFilePath: '',
-    assumptionsPath: '',
     isRunFlagTrue: 'No',
     isDBFlag: 'No'
   });
 
   const inputFileHandler = useFileHandler();
-  const assumptionsFileHandler = useFileHandler();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -26,26 +25,24 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    setIsSubmitting(true);
+    await onSubmit({
       ...formData,
       inputFile: inputFileHandler.selectedFile,
-      assumptionsFile: assumptionsFileHandler.selectedFile,
     });
+    setIsSubmitting(false);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header Bar */}
         <div className="bg-blue-800 h-1"></div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Control Sheet Entry</h2>
+          <h2 className="text-bs font-bold text-center text-gray-900 mb-6">Control Sheet Entry</h2>
 
-          {/* Serial No */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Serial No:</label>
             <input
@@ -57,7 +54,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             />
           </div>
 
-          {/* Product Code */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product Code:</label>
             <input
@@ -68,7 +64,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             />
           </div>
 
-          {/* Input File Path */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Input File Path:</label>
             <input
@@ -101,40 +96,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             )}
           </div>
 
-          {/* Assumptions Path */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Assumptions Path:</label>
-            <input
-              type="url"
-              value={formData.assumptionsPath}
-              onChange={(e) => handleInputChange('assumptionsPath', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-              placeholder="Enter File URL"
-            />
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                className="px-4 py-2 border border-gray-400 rounded text-gray-700 hover:bg-gray-50"
-                onClick={() => document.getElementById('assumptionsFile')?.click()}
-              >
-                Choose File
-              </button>
-              <span className="text-sm text-gray-500">
-                {assumptionsFileHandler.selectedFile ? assumptionsFileHandler.selectedFile.name : 'No file chosen'}
-              </span>
-            </div>
-            <input
-              id="assumptionsFile"
-              type="file"
-              onChange={assumptionsFileHandler.handleFileChange}
-              className="hidden"
-            />
-            {assumptionsFileHandler.error && (
-              <p className="text-xs text-red-600 mt-1">{assumptionsFileHandler.error}</p>
-            )}
-          </div>
-
-          {/* Run Indicator */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">is_Run_Flag_True:</label>
             <div className="flex items-center space-x-6">
@@ -163,7 +124,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
             </div>
           </div>
 
-          {/* is_DB_Flag (kept for parity if used later) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">is_DB_Flag:</label>
             <div className="flex items-center space-x-6">
@@ -193,19 +153,20 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-4 pt-6 border-t">
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-400"
+              disabled={isSubmitting}
             >
-              Add
+              {isSubmitting ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>
@@ -214,4 +175,4 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({ onSubmit, onClose }
   );
 };
 
-export default ControlSheetForm; 
+export default ControlSheetForm;

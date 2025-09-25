@@ -76,7 +76,7 @@ export function normalizeProductPercents(product: Record<string, any>) {
     product['ApplyMortality'] = parseInt(product['ApplyMortality']);
     product['ApplyMorbidity'] = parseInt(product['ApplyMorbidity']);
   });
-  product
+  product;
   return product;
 }
 
@@ -91,7 +91,7 @@ function getAssumptionVal(assumptionBE: number | string, mad: number, madFlag: n
 }
 
 export function complieInputs(inputs: any, product: any) {
-  const keyToIgnore: string[] = ['Policy Term_Month', 'Premium Term_Month', 'Premium Frequency', 'Coverage Effective date'];
+  const keyToIgnore: string[] = ['Policy Term_Month', 'Premium Term_Month', 'Premium Frequency', 'Coverage Effective date', 'PH Entry Age'];
   const productkeyToIgnore: string[] = [
     'Fixed Initial Exp BE',
     'Fixed Renewal Exp BE',
@@ -116,6 +116,7 @@ export function complieInputs(inputs: any, product: any) {
   }
 
   compliedInputs.policyEffectiveDate = inputs['Coverage Effective date'];
+  compliedInputs.phEntryAge = toNumber(inputs['PH Entry Age']);
   compliedInputs.ptMonths = toNumber(inputs['Policy Term_Month']);
   compliedInputs.pptMonths = toNumber(inputs['Premium Term_Month']);
   compliedInputs.premFq = getPremiumFrequencyValue(inputs['Premium Frequency']);

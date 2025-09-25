@@ -1,62 +1,42 @@
-import { useCallback, useState } from 'react';
+import { useState, useCallback } from 'react';
 
-export interface UseFileUploadOptions<T> {
+interface UseFileUploadOptions<T> {
   onSuccess?: (result: T) => void | Promise<void>;
   onError?: (error: Error) => void;
   clearFileOnSuccess?: boolean;
 }
 
-export function useFileUpload<T = unknown>(
-  uploadFn: (file: File) => Promise<T>,
-  options?: UseFileUploadOptions<T>
+export function useFileUpload<T>(
+  uploadFn: (file: File, clearFn: () => void) => Promise<T>,
+  options: UseFileUploadOptions<T> = {}
 ) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const upload = useCallback(async (file: File | null, clearFileFn?: () => void) => {
-    if (!file) {
-      setError('Please select a file to upload');
-      return;
-    }
-
+  const upload = useCallback(async (file: File | null, clearFn: () => void) => {
+    if (!file) return;
+    
     setUploading(true);
     setError(null);
     
     try {
-      const result = await uploadFn(file);
-      
-      if (options?.clearFileOnSuccess && clearFileFn) {
-        clearFileFn();
-        // Also clear the actual file input
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        fileInputs.forEach(input => {
-          (input as HTMLInputElement).value = '';
-        });
+      const result = await uploadFn(file, clearFn);
+      if (options.clearFileOnSuccess) {
+        clearFn();
       }
-      
-      if (options?.onSuccess) {
-        await options.onSuccess(result);
-      }
-      
+      await options.onSuccess?.(result);
       return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Upload failed';
       setError(errorMessage);
-      console.error(err);
-      
-      if (options?.onError && err instanceof Error) {
-        options.onError(err);
-      }
-      
-      throw err;
+      options.onError?.(e instanceof Error ? e : new Error(errorMessage));
+      throw e;
     } finally {
       setUploading(false);
     }
   }, [uploadFn, options]);
 
-  const clearError = useCallback(() => setError(null), []);
-
-  return { upload, uploading, error, clearError } as const;
+  return { upload, uploading, error } as const;
 }
 
 export default useFileUpload;

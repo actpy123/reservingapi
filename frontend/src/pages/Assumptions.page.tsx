@@ -93,7 +93,7 @@ const Assumptions: React.FC = () => {
           <button
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
-            className="bg-accent-500 text-white px-6 py-2 rounded font-semibold hover:bg-accent-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="bg-orange-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {uploading ? 'Uploading...' : 'Upload Assumptions'}
           </button>
@@ -121,9 +121,18 @@ const Assumptions: React.FC = () => {
         </div>
         
         {loading ? (
-          <div className="p-6 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
-            <p className="mt-2 text-gray-600">Loading assumptions...</p>
+          <div className="p-6">
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-6 animate-pulse">
+                  <div className="h-4 w-40 bg-gray-200 rounded mb-3" />
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
+                    <div className="h-24 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : !assumptions || assumptions.length === 0 ? (
           <div className="p-6 text-center">
@@ -156,4 +165,4 @@ const Assumptions: React.FC = () => {
   );
 };
 
-export default Assumptions; 
+export default Assumptions;

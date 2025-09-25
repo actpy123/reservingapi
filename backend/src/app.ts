@@ -7,9 +7,9 @@ import bodyParser from 'body-parser'; // Body parser to parse incoming JSON requ
 import compression from 'compression'; // Compression middleware to reduce the size of responses
 import { loadRoutes } from '@loaders/route.loader';
 import mongoConnect from '@configs/db';
-import { ROUTES_PATH } from '@configs/app.config';
 import { customResponseMiddleware } from '@middlewares/custome-response.middleware';
 import loadAssumptions from '@loaders/Initial-data.loader';
+import path from 'path';
 
 // Initialize Express app
 const app = express();
@@ -26,7 +26,15 @@ app.use(cors());
 app.use(customResponseMiddleware);
 
 // Loading Routes
-loadRoutes(app, ROUTES_PATH);
+loadRoutes(app, path.join(__dirname, '/routes'));
+
+app.use(express.static(path.join(__dirname, '/public')));
+
+if (process.env.NODE_ENV !== 'local') {
+  app.get(/^(?!.*\/api\/).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '/public', 'index.html'));
+  });
+}
 
 // Start server only after DB connects
 const startServer = async () => {
