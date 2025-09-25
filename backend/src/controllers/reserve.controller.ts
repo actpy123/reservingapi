@@ -151,8 +151,8 @@ export async function reserveCalculator(req: Request, res: Response) {
     data: {
       skippedPolicies,
       successfulPolicies,
-      outputFile: `http://localhost:3000/reserve/download/output/${reserveResultId}`,
-      cashflows: `http://localhost:3000/reserve/download/cashflow/${reserveResultId}`,
+      outputFile: `${process.env.VITE_API_BASE_URL}/download/output/${reserveResultId}`,
+      cashflows: `${process.env.VITE_API_BASE_URL}/download/cashflow/${reserveResultId}`,
     },
   });
 }
