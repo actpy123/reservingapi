@@ -1,6 +1,17 @@
 build:
 	rm -rf ./dist
-	cd backend && npm install --force && rm -rf ./dist && npm run build && cp -r ./dist ../dist && cp -r ./node_modules ../dist
-	mkdir ./dist/public
-	cd frontend && npm install --force && VITE_API_BASE_URL=http://reserve.actpy.com/api/reserve && npm run build && cp -r ./dist/* ../dist/public
-	
+	# Backend build
+	cd backend && \
+		npm install --force && \
+		rm -rf ./dist && \
+		npm run build && \
+		cp -r ./dist ../dist && \
+		cp -r ./node_modules ../dist
+
+	# Frontend build
+	mkdir -p ./dist/public
+	cd frontend && \
+		npm install --force && \
+		echo "VITE_API_BASE_URL=http://reserve.actpy.com/api/reserve" > .env && \
+		npm run build && \
+		cp -r ./dist/* ../dist/public
