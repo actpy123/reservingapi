@@ -14,8 +14,6 @@ import Piscina from 'piscina';
 import { ReserveResultModel } from '@models/reserve-result.model';
 import { any } from 'zod';
 
-console.log(resolve(process.cwd(), 'src/workers/reserve-calculator.worker.js'));
-
 export async function getCurrentAssumptions(req: Request, res: Response) {
   // You could process files here or send them back
   res.sendCustomResponse(200, {
@@ -72,6 +70,7 @@ export async function uploadAssumptions(req: Request, res: Response) {
 const piscina = new Piscina({
   filename: resolve(process.cwd(), 'src/workers/reserve-calculator.worker.ts'), // adjust path
   maxThreads: 8,
+  execArgv: ['-r', 'ts-node/register/transpile-only', '-r', 'tsconfig-paths/register'],
 });
 
 export async function reserveCalculator(req: Request, res: Response) {
