@@ -44,12 +44,22 @@ const Assumptions: React.FC = () => {
           <tbody>
             {previewRows.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-t">
-                {columns.map((col) => (
-                  <td key={col} className="px-2 py-1 border text-gray-600">
-                    {String(row[col] || '').substring(0, 20)}
-                    {String(row[col] || '').length > 20 ? '...' : ''}
-                  </td>
-                ))}
+                {columns.map((col) => {
+                  // Robust key normalization: trim, case-insensitive, remove spaces/underscores
+                  const normalize = (k: any) => String(k).trim().toLowerCase().replace(/[\s_]+/g, '');
+                  const normalizedRow: Record<string, any> = {};
+                  for (const key of Object.keys(row)) {
+                    normalizedRow[normalize(key)] = row[key];
+                  }
+                  const value = normalizedRow[normalize(col)] ?? '';
+                  const text = String(value);
+                  return (
+                    <td key={col} className="px-2 py-1 border text-gray-600">
+                      {text.substring(0, 20)}
+                      {text.length > 20 ? '...' : ''}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
