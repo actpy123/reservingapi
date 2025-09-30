@@ -47,9 +47,9 @@ const Dashboard: React.FC = () => {
                 <NavLink
                   to="/reserve"
                   className={(args: { isActive: boolean }) => `${args.isActive ? 'bg-white text-blue-800' : 'bg-white/0 hover:bg-white/10 text-white'} w-full rounded-full px-3 py-3 text-left transition-colors whitespace-nowrap truncate block`}
-                  title="Reserve Calculate"
+                  title="Reserve Calculation"
                 >
-                  Reserve Calculate
+                  Reserve Calculation
                 </NavLink>
               </>
             ) : (

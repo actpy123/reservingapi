@@ -178,10 +178,7 @@ const ReserveCalculatePage: React.FC = () => {
               <span>Run NO.</span>
             </div>
             <div className="text-center px-3">
-              <span>Product Code</span>
-            </div>
-            <div className="text-center px-3">
-              <span>Run Indicator</span>
+              <span>Scenario Code</span>
             </div>
             <div className="text-center px-3">
               <span>Input File Path</span>
@@ -221,7 +218,6 @@ const ReserveCalculatePage: React.FC = () => {
               <div key={row.id} className="px-6 py-4 grid grid-cols-11 text-sm text-gray-900 divide-x divide-gray-100">
                 <div className="text-center px-3">{row.runNo}</div>
                 <div className="text-center px-3">{row.productCode}</div>
-                <div className="text-center px-3">{row.runIndicator}</div>
                 <div className="text-center px-3 truncate" title={row.inputFilePath || (row.inputFile && row.inputFile.name) || ''}>
                   {row.inputFilePath ? (
                     <a href={row.inputFilePath} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">

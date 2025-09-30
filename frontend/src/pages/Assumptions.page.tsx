@@ -28,9 +28,9 @@ const Assumptions: React.FC = () => {
     if (!data || data.length === 0) return 'No data';
     const firstRow = data[0];
     const columns = Object.keys(firstRow);
-    const previewRows = data.slice(0, 5);
+    const previewRows = data; 
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[160px]">
         <table className="min-w-full text-xs">
           <thead>
             <tr className="bg-brand-50">
@@ -45,7 +45,6 @@ const Assumptions: React.FC = () => {
             {previewRows.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-t">
                 {columns.map((col) => {
-                  // Robust key normalization: trim, case-insensitive, remove spaces/underscores
                   const normalize = (k: any) => String(k).trim().toLowerCase().replace(/[\s_]+/g, '');
                   const normalizedRow: Record<string, any> = {};
                   for (const key of Object.keys(row)) {
@@ -64,9 +63,6 @@ const Assumptions: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {data.length > 5 && (
-          <p className="text-xs text-gray-500 mt-2">Showing first 5 rows of {data.length} total rows</p>
-        )}
       </div>
     );
   };
