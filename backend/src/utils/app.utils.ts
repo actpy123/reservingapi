@@ -22,18 +22,29 @@ export function parsePercent(value: string | number | null | undefined): number 
     return 0;
   }
 
-  try {
-    return typeof value === 'number' ? value : parseFloat(value);
-  } catch {
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (trimmed.endsWith('%')) {
-        const num = parseFloat(trimmed.replace('%', '').trim());
-        return isNaN(num) ? 0 : num / 100;
-      }
-    }
+  if (typeof value === 'number') {
+    // If it's a number already between 0 and 1, return as-is
+    // If it's 80, assume it's 80% → convert to 0.8
+    return value > 1 ? value / 100 : value;
+  }
+
+  // Now handle string values
+  const trimmed = value.trim();
+
+  // Handle percent signs, e.g. "80%" → 0.8
+  if (trimmed.endsWith('%')) {
+    const num = parseFloat(trimmed.replace('%', '').trim());
+    return isNaN(num) ? 0 : num / 100;
+  }
+
+  // Handle plain numbers in string form, e.g. "80" → 0.8
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) {
     return 0;
   }
+
+  // Always map string numbers to [0,1] range
+  return num > 1 ? num / 100 : num;
 }
 
 export function toVariableName(key: string): string {
@@ -68,4 +79,3 @@ export function getPremiumFrequencyValue(freq: string): number {
       return 0;
   }
 }
-

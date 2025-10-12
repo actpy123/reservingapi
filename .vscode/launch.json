@@ -2,23 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug npm run dev",
       "type": "node",
       "request": "launch",
-      "name": "Debug app.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register",
-        "-r",
-        "tsconfig-paths/register",
-        "-r",
-        "module-alias/register"
-      ],
-      "args": ["${workspaceFolder}/backend/src/app.ts"],
-      "cwd": "${workspaceFolder}/backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "console": "integratedTerminal",
       "restart": true,
       "protocol": "inspector",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "NODE_ENV": "development"
+      }
     }
   ]
 }

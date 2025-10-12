@@ -4,6 +4,8 @@ import { calculateValue, calcReservePerPolicy, calculateFinalReserve } from '@li
 import { generateLoanSchedule } from '@utils/loan.utils';
 import { percentToDecimal } from '@utils/number.utils';
 import dayjs from 'dayjs';
+import fs from 'fs';
+import * as Papa from 'papaparse';
 
 export interface WorkerInput {
   policyData: any;
@@ -137,26 +139,29 @@ export default async function (input: WorkerInput) {
 
   const cashFlows = [];
 
+  // const csv = Papa.unparse(reserves);
+  // fs.writeFileSync('output222.csv', csv);
+
   for (let x = 1; x <= cleanPolicyData.ptMonths; x++) {
     const reserveIndex = x - 1;
     const reserveRow = reserves[reserveIndex];
     const cashFlow = {
       Period: reserveIndex,
-      premium: (reserves[policyMonths + 3 + reserveIndex]?.premium ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Investment Income': (reserves[policyMonths + 3 + reserveIndex]?.investmentIncome ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'FY/Ren. Commission': (reserves[policyMonths + 3 + reserveIndex]?.FYCommission ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Initial Expense (Fixed and Variable)': (reserves[policyMonths + 3 + reserveIndex]?.initialExpense ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Renewal Variable Exp': (reserves[policyMonths + 3 + reserveIndex]?.renewalVariableExp ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Renewal Fixed Exp': (reserves[policyMonths + 3 + reserveIndex]?.renewalFixedExp ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Death Outgo': (reserves[policyMonths + 3 + reserveIndex]?.deathOutGo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Morbidity Outgo': (reserves[policyMonths + 3 + reserveIndex]?.morbidityOutGo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Surrender Outgo': (reserves[policyMonths + 3 + reserveIndex]?.surrenderOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Survival Outgo': (reserves[policyMonths + 3 + reserveIndex]?.survivalOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Maturity Outgo': (reserves[policyMonths + 3 + reserveIndex]?.maturityOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Net Cashflow': (reserves[policyMonths + 3 + reserveIndex]?.netCashflow ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Final Reserve': (reserves[policyMonths + 3 + reserveIndex]?.finalReserve ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      'Solvency Margin': (reserves[policyMonths + 3 + reserveIndex]?.solvencyMargin ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
-      UPR: (reserves[policyMonths + 3 + reserveIndex]?.upr ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      premium: (reserves[policyMonths + 0 + reserveIndex]?.premium ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Investment Income': (reserves[policyMonths + 0 + reserveIndex]?.investmentIncome ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'FY/Ren. Commission': (reserves[policyMonths + 0 + reserveIndex]?.FYCommission ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Initial Expense (Fixed and Variable)': (reserves[policyMonths + 0 + reserveIndex]?.initialExpense ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Renewal Variable Exp': (reserves[policyMonths + 0 + reserveIndex]?.renewalVariableExp ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Renewal Fixed Exp': (reserves[policyMonths + 0 + reserveIndex]?.renewalFixedExp ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Death Outgo': (reserves[policyMonths + 0 + reserveIndex]?.deathOutGo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Morbidity Outgo': (reserves[policyMonths + 0 + reserveIndex]?.morbidityOutGo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Surrender Outgo': (reserves[policyMonths + 0 + reserveIndex]?.surrenderOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Survival Outgo': (reserves[policyMonths + 0 + reserveIndex]?.survivalOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Maturity Outgo': (reserves[policyMonths + 0 + reserveIndex]?.maturityOutgo ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Net Cashflow': (reserves[policyMonths + 0 + reserveIndex]?.netCashflow ?? 0) / (reserves[policyMonths]?.livesAtStart ?? 0),
+      'Final Reserve': reserves[policyMonths + 0 + reserveIndex]?.finalReserve ?? 0,
+      'Solvency Margin': reserves[policyMonths + 0 + reserveIndex]?.solvencyMargin ?? 0,
+      UPR: reserves[policyMonths + 0 + reserveIndex]?.upr ?? 0,
     };
     cashFlows.push(cashFlow);
   }

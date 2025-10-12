@@ -1,5 +1,9 @@
 {
   "watch": ["src"],
   "ext": "ts,json",
-  "exec": "ts-node -r ts-node/register/transpile-only -r tsconfig-paths/register -r module-alias/register src/app.ts"
+  "exec": "ts-node -r ts-node/register/transpile-only -r tsconfig-paths/register -r module-alias/register src/app.ts",
+  "env": {
+    "VITE_API_BASE_URL": "http://localhost:3000/api/reserve",
+    "NODE_ENV": "local"
+  }
 }

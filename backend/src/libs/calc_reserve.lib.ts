@@ -70,7 +70,7 @@ export async function calcReserve(
           ? 0
           : reserve.premium * (reserve.year === 1 ? inputs.varExpInitialBE ?? 0 : 0) + (duration === 1 ? inputs.fixedInitialExpBE ?? 0 : 0);
 
-      reserve.renewalVariableExp = duration >= (inputs.ptMonths ?? 0) + 1 ? 0 : reserve.year !== 1 ? (product.renewalPremExp ?? 0) * reserve.premium : 0;
+      reserve.renewalVariableExp = duration >= (inputs.ptMonths ?? 0) + 1 ? 0 : reserve.year !== 1 ? (inputs.renewalPremExp ?? 0) * reserve.premium : 0;
       reserve.renewalFixedExp =
         duration <= inputs.ptMonths ? (duration === 1 ? 0 : (inputs.fixedRenewalExpVal ?? 0) / 12) * (reserve.inflationFactor ?? 0) * (reserve.livesAtStart ?? 0) : 0;
       reserve.claimExpense =

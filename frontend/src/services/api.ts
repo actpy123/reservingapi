@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/reserve";
+  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
 
 export interface Assumption {
   name: string;
@@ -35,7 +35,9 @@ export class ApiService {
         await response.json();
       const files = result.data?.files || [];
 
-      return this.transformRateTables(files);
+      return this.transformRateTables(files).sort((a, b) =>
+        a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0
+      );
     } catch (error) {
       console.error("Error fetching assumptions:", error);
       throw error;
