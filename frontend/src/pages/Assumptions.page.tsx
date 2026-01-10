@@ -24,7 +24,14 @@ const Assumptions: React.FC = () => {
   } = useFileUpload(ApiService.uploadAssumptions, {
     clearFileOnSuccess: true,
     onSuccess: async () => {
-      await refetch();
+      // Add a small delay to ensure backend cache is updated
+      setTimeout(async () => {
+        try {
+          await refetch();
+        } catch (error) {
+          console.error("Error refetching assumptions after upload:", error);
+        }
+      }, 500);
     },
   });
 
