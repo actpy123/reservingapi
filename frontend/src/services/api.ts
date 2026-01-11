@@ -35,7 +35,11 @@ export class ApiService {
         await response.json();
       const files = result.data?.files || [];
 
-      return this.transformRateTables(files).sort((a, b) =>
+      if (!Array.isArray(files) || files.length === 0) {
+        return [];
+      }
+
+      return ApiService.transformRateTables(files).sort((a, b) =>
         a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0
       );
     } catch (error) {
@@ -144,22 +148,31 @@ export class ApiService {
   }
 
   static transformRateTables(assumptions: Assumption[]): Assumption[] {
-    return assumptions.map((assumption) => {
+    if (!Array.isArray(assumptions) || assumptions.length === 0) {
+      return [];
+    }
+    
+    return assumptions.map((assumptionItem) => {
+      if (!assumptionItem || typeof assumptionItem !== 'object') {
+        return assumptionItem;
+      }
+      
       if (
-        assumption.name &&
-        (assumption.name.toLowerCase().includes("mortality") ||
-          assumption.name.toLowerCase().includes("morbidity") ||
-          assumption.name.toLowerCase().includes("lapse") ||
-          assumption.name.toLowerCase().includes("rate") ||
-          assumption.name.toLowerCase().includes("table"))
+        assumptionItem.name &&
+        typeof assumptionItem.name === 'string' &&
+        (assumptionItem.name.toLowerCase().includes("mortality") ||
+          assumptionItem.name.toLowerCase().includes("morbidity") ||
+          assumptionItem.name.toLowerCase().includes("lapse") ||
+          assumptionItem.name.toLowerCase().includes("rate") ||
+          assumptionItem.name.toLowerCase().includes("table"))
       ) {
-        const transformed = this.transformMortalityRates(assumption.data);
+        const transformed = ApiService.transformMortalityRates(assumptionItem.data || []);
         return {
-          ...assumption,
-          data: this.createBackendCompatibleRates(transformed),
+          ...assumptionItem,
+          data: ApiService.createBackendCompatibleRates(transformed),
         };
       }
-      return assumption;
+      return assumptionItem;
     });
   }
 
@@ -179,7 +192,12 @@ export class ApiService {
         await response.json();
       if (!result.success || !result.data)
         throw new Error(result.message || "Upload failed");
-      const transformedFiles = this.transformRateTables(result.data.files);
+      
+      // Safely handle the files array
+      const files = result.data?.files || [];
+      const transformedFiles = Array.isArray(files) && files.length > 0 
+        ? ApiService.transformRateTables(files)
+        : [];
 
       return {
         ...result.data,
