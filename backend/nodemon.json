@@ -4,6 +4,11 @@
   "exec": "ts-node -r ts-node/register/transpile-only -r tsconfig-paths/register -r module-alias/register src/app.ts",
   "env": {
     "VITE_API_BASE_URL": "http://localhost:3000/api/reserve",
-    "NODE_ENV": "local"
+    "NODE_ENV": "local",
+    "MIGRATE_MONGO_URI": "mongodb://localhost:27017/drawdown_db",
+    "MIGRATE_MONGO_COLLECTION": "migrations",
+    "MIGRATE_MIGRATIONS_PATH": "./src/migrations",
+    "MIGRATE_TEMPLATE_PATH": "./migrations/template.ts",
+    "MIGRATE_AUTOSYNC": false
   }
 }

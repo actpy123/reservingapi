@@ -1,4 +1,5 @@
 import { Assumption, PolicySummary } from '@CustomTypes/app.type';
+import { IAssumption } from '@models/assumption.model';
 import { getPremiumFrequencyValue, parsePercent, toVariableName } from '@utils/app.utils';
 import { safeParseDate } from '@utils/date.utils';
 import { percentToDecimal, toNumber } from '@utils/number.utils';

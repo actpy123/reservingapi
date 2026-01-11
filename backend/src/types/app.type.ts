@@ -30,4 +30,6 @@ export interface PolicySummary {
 export interface Assumption {
   name: string;
   data: any[];
+  assumptionId: string;
+  userId: string;
 }

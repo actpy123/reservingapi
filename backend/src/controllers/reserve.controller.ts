@@ -1,30 +1,33 @@
-import cache from '@libs/cache';
-import { AssumptionModel } from '@models/assumption.model';
+import { AssumptionModel, IAssumption } from '@models/assumption.model';
 import { unzip } from '@utils/app.utils';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
 import * as Papa from 'papaparse';
 import { parse } from 'path';
-import { Scenario } from '@CustomTypes/app.type';
+import { Assumption, Scenario } from '@CustomTypes/app.type';
 import { findProductByScenario, loadRates, normalizeProductPercents } from '@libs/reserve.libs';
 import { toNumber } from '@utils/number.utils';
 
 import { resolve } from 'path';
 import Piscina from 'piscina';
 import { ReserveResultModel } from '@models/reserve-result.model';
-import { any } from 'zod';
+import { AuthenticatedRequest } from '@middlewares/authenticateMiddleware';
+import { UserModel, UserType } from '@models/user.model';
 
-export async function getCurrentAssumptions(req: Request, res: Response) {
+export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user; // ✅ always defined here
+  const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
   // You could process files here or send them back
   res.sendCustomResponse(200, {
     message: 'Files uploaded and stored in memory.',
     data: {
-      files: await cache.get('assumptions'),
+      files: assumptions,
     },
   });
 }
 
-export async function uploadAssumptions(req: Request, res: Response) {
+export async function uploadAssumptions(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user; // 👈 Type assertion here
   const assumptionFileZip = req.file as Express.Multer.File; // 👈 Type assertion here
 
   if (!assumptionFileZip) {
@@ -33,7 +36,6 @@ export async function uploadAssumptions(req: Request, res: Response) {
   try {
     const extractedFiles = unzip(assumptionFileZip.buffer);
     await AssumptionModel.updateMany({ valid: true }, { $set: { valid: false } });
-    cache.clear();
     const assumptionId = randomUUID();
 
     const assumptions = [];
@@ -47,11 +49,9 @@ export async function uploadAssumptions(req: Request, res: Response) {
           header: true, // First row as header
           skipEmptyLines: true,
         });
-        assumptions.push({ name: assumptionName, data: result.data, assumptionId });
+        assumptions.push({ name: assumptionName, data: result.data, assumptionId, userId: user._id });
       }
     }
-    cache.set('assumptionId', assumptionId);
-    cache.set('assumptions', assumptions);
     const saved = await AssumptionModel.insertMany(assumptions);
 
     res.sendCustomResponse(200, {
@@ -74,10 +74,12 @@ const piscina = new Piscina({
   execArgv: process.env.NODE_ENV === 'local' ? ['-r', 'ts-node/register/transpile-only', '-r', 'tsconfig-paths/register'] : [],
 });
 
-export async function reserveCalculator(req: Request, res: Response) {
+export async function reserveCalculator(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user; // ✅ always defined here
+  const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
+
   const scenarios: Scenario[] = req.body;
-  const assumptions: any = await cache.get('assumptions');
-  const assumptionId: any = await cache.get('assumptionId');
+  const assumptionId: any = assumptions[0].assumptionId;
   // const policySummaries = createPolicySummaryArray(1201);
   let skippedPolicies = 0;
   let successfulPolicies = 0;

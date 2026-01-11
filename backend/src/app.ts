@@ -35,11 +35,9 @@ if (process.env.NODE_ENV !== 'local') {
     res.sendFile(path.join(__dirname, '/public', 'index.html'));
   });
 }
-
 // Start server only after DB connects
 const startServer = async () => {
   await mongoConnect(); // make sure DB connection is established
-  loadAssumptions();
   app.listen(3000, () => {
     console.log('Server running at http://localhost:3000');
   });

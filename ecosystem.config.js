@@ -15,6 +15,11 @@ module.exports = {
       env: {
         NODE_ENV: "development",
         VITE_API_BASE_URL: "http://reserve.actpy.com/api/reserve",
+        MIGRATE_MONGO_URI: "mongodb://localhost:27017/drawdown_db",
+        MIGRATE_MONGO_COLLECTION: "migrations",
+        MIGRATE_MIGRATIONS_PATH: "./migrations",
+        MIGRATE_TEMPLATE_PATH: "./migrations/template.ts",
+        MIGRATE_AUTOSYNC: false,
       },
     },
   ],
