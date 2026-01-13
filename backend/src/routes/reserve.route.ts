@@ -10,16 +10,8 @@ const orderRoute = Router();
 
 orderRoute.post('/assumptions', authenticateRequest, upload.single('files'), uploadAssumptions);
 orderRoute.get('/assumptions', authenticateRequest, getCurrentAssumptions);
-orderRoute.post(
-  '/reserve-calculator',
-  (req, res, next) => {
-    req.setTimeout(9000000); // 5 minutes
-    res.setTimeout(9000000);
-    next();
-  },
-  reserveCalculator
-);
-orderRoute.get('/download/output/:id', downloadOutput);
-orderRoute.get('/download/cashflow/:id', downloadCashflow);
+orderRoute.post('/reserve-calculator',authenticateRequest, reserveCalculator);
+orderRoute.get('/download/output/:id',authenticateRequest, downloadOutput);
+orderRoute.get('/download/cashflow/:id',authenticateRequest, downloadCashflow);
 
 export default orderRoute;

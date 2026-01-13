@@ -26,9 +26,52 @@ export interface Scenario {
 }
 
 export class ApiService {
+ 
+   private static token: string | null = null;
+  
+  static async login() {
+    const response = await fetch(`http://localhost:3000/api/user/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailAddress: "shubham.shukla@idon.app",
+        password: "Idon2wq!",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Login failed");
+    }
+
+    const data = await response.json();
+
+    ApiService.token = data.token;              // ✅ store in class
+    localStorage.setItem("authToken", data.token); // optional persistence
+
+    return data;
+    }
+
+  private static getAuthHeaders(): HeadersInit {
+    if (!ApiService.token) {
+      return {};
+    }
+
+    console.log('token',ApiService.token);
+    return {
+      Authorization: `Bearer ${ApiService.token}`,
+    };
+  }
+
+
   static async getAssumptions(): Promise<Assumption[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/assumptions`);
+      const loginData= await this.login();
+      const response = await fetch(`${API_BASE_URL}/assumptions`, {
+      headers: {
+        ...ApiService.getAuthHeaders()
+      }});
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const result: ApiResponse<{ files: Assumption[] }> =
@@ -184,6 +227,9 @@ export class ApiService {
       formData.append("files", file);
       const response = await fetch(`${API_BASE_URL}/assumptions`, {
         method: "POST",
+        headers: {
+        ...ApiService.getAuthHeaders()
+                    },
         body: formData,
       });
       if (!response.ok)
@@ -215,7 +261,11 @@ export class ApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/reserve-calculator`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+
+          "Content-Type": "application/json",
+                    ...ApiService.getAuthHeaders(),
+        },
         body: JSON.stringify(scenarios),
       });
       if (!response.ok) {
