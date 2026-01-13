@@ -5,12 +5,19 @@ import Assumptions from "./pages/Assumptions.page";
 import ReserveCalculatePage from "./pages/ReserveCalculate.page";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-const isLoggedIn = false; // example
+import { useState } from "react";
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("authToken")
+  );
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={<LoginPage setIsLoggedIn={setIsLoggedIn} />}
+        />
 
         <Route
           path="/"
@@ -25,6 +32,7 @@ function App() {
           <Route path="assumptions" element={<Assumptions />} />
           <Route path="reserve" element={<ReserveCalculatePage />} />
         </Route>
+
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

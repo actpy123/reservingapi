@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { ApiService } from "../services/api";
 
-const LoginPage = () => {
+type LoginPageProps = {
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const LoginPage: React.FC<LoginPageProps> = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,23 +17,19 @@ const LoginPage = () => {
 
   const returnUrl =
     new URLSearchParams(location.search).get("returnUrl") || "/reserve";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // 🔐 Replace with real SSO / API call
-      await new Promise((r) => setTimeout(r, 1200));
+      await ApiService.login(email, password);
 
-      if (email !== "admin@idon.com" || password !== "123456") {
-        throw new Error("Invalid credentials");
-      }
+      setIsLoggedIn(true); // ✅ THIS is the key line
 
-      // On success, redirect
       navigate(returnUrl, { replace: true });
     } catch (err) {
+      console.log("error", err);
       setError("Invalid email or password");
     } finally {
       setLoading(false);
