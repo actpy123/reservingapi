@@ -1,5 +1,5 @@
-const API_BASE_URL ="http://localhost:3000/api/reserve";
-  // import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
+const API_BASE_URL = "http://localhost:3000/api/reserve";
+// import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
 
 export interface Assumption {
   name: string;
@@ -26,7 +26,7 @@ export interface Scenario {
 }
 
 export class ApiService {
-  private static token: string | null = null;
+  private static token: string | null = localStorage.getItem("authToken");
 
   static async login(email: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/login`, {
