@@ -1,6 +1,6 @@
-// const API_BASE_URL = "http://localhost:3000/api/reserve";
+// const API_BASE_URL = "http://localhost:3000/api";
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
+  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api";
 
 export interface Assumption {
   name: string;
@@ -30,7 +30,7 @@ export class ApiService {
   private static token: string | null = localStorage.getItem("authToken");
 
   static async login(email: string, password: string) {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(`${API_BASE_URL}/user/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export class ApiService {
 
   static async getAssumptions(): Promise<Assumption[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/assumptions`, {
+      const response = await fetch(`${API_BASE_URL}/reserve/assumptions`, {
         headers: {
           ...ApiService.getAuthHeaders(),
         },
@@ -225,7 +225,7 @@ export class ApiService {
     try {
       const formData = new FormData();
       formData.append("files", file);
-      const response = await fetch(`${API_BASE_URL}/assumptions`, {
+      const response = await fetch(`${API_BASE_URL}/reserve/assumptions`, {
         method: "POST",
         headers: {
           ...ApiService.getAuthHeaders(),
@@ -260,14 +260,17 @@ export class ApiService {
     scenarios: Scenario[]
   ): Promise<ReserveCalculationResult> {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserve-calculator`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...ApiService.getAuthHeaders(),
-        },
-        body: JSON.stringify(scenarios),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/reserve/reserve-calculator`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...ApiService.getAuthHeaders(),
+          },
+          body: JSON.stringify(scenarios),
+        }
+      );
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -341,10 +344,10 @@ export class ApiService {
   }
 
   static getOutputDownloadUrl(id: string): string {
-    return `${API_BASE_URL}/download/output/${id}`;
+    return `${API_BASE_URL}/reserve/download/output/${id}`;
   }
 
   static getCashflowDownloadUrl(id: string): string {
-    return `${API_BASE_URL}/download/cashflow/${id}`;
+    return `${API_BASE_URL}/reserve/download/cashflow/${id}`;
   }
 }
