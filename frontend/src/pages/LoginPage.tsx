@@ -58,7 +58,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ setIsLoggedIn }) => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@idon.com"
+              placeholder="Your email address"
               className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
