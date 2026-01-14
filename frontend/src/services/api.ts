@@ -1,5 +1,6 @@
-const API_BASE_URL = "http://localhost:3000/api/reserve";
-// import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
+// const API_BASE_URL = "http://localhost:3000/api/reserve";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
 
 export interface Assumption {
   name: string;
