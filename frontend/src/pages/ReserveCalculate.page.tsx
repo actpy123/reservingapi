@@ -149,6 +149,32 @@ const ReserveCalculatePage: React.FC = () => {
     }
   };
 
+  const handleDownload = async (url: string, filename?: string) => {
+    const response = await fetch(url, {
+      headers: {
+        ...ApiService.getAuthHeaders(),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Download failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename || "";
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
+  };
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -229,9 +255,15 @@ const ReserveCalculatePage: React.FC = () => {
                 </div>
                 <div className="text-center px-3 truncate" title={row.outputFilePath || ''}>
                   {row.outputFilePath ? (
-                    <a href={row.outputFilePath} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(row.outputFilePath, "reserve-output")
+                      }
+                      className="text-blue-600 hover:underline bg-transparent p-0 border-0 cursor-pointer"
+                    >
                       {row.outputFilePath}
-                    </a>
+                    </button>
                   ) : (
                     <span>-</span>
                   )}
@@ -267,24 +299,26 @@ const ReserveCalculatePage: React.FC = () => {
                       Run
                     </button>
                     {ApiService.isValidUrl(row.outputUrl) && (
-                      <a
-                        href={row.outputUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(row.outputUrl!, "reserve-output.csv")
+                        }
                         className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full border border-green-600 shadow-sm"
                       >
                         Download Output
-                      </a>
+                      </button>
                     )}
                     {ApiService.isValidUrl(row.cashflowUrl) && (
-                      <a
-                        href={row.cashflowUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(row.cashflowUrl!, "cashflow.csv")
+                        }
                         className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full border border-blue-600 shadow-sm"
                       >
                         Download Cashflow
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
