@@ -15,15 +15,19 @@ import { AuthenticatedRequest } from '@middlewares/authenticateMiddleware';
 import { UserModel, UserType } from '@models/user.model';
 
 export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Response) {
-  const user: any = req.user; // ✅ always defined here
-  const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
-  // You could process files here or send them back
-  res.sendCustomResponse(200, {
-    message: 'Files uploaded and stored in memory.',
-    data: {
-      files: assumptions,
-    },
-  });
+  try {
+    const user: any = req.user; // ✅ always defined here
+    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
+    // You could process files here or send them back
+    res.sendCustomResponse(200, {
+      message: 'Files uploaded and stored in memory.',
+      data: {
+        files: assumptions,
+      },
+    });
+  } catch (error) {
+    res.sendCustomResponse(500, { message: 'invalid user' });
+  }
 }
 
 export async function uploadAssumptions(req: AuthenticatedRequest, res: Response) {
@@ -75,17 +79,16 @@ const piscina = new Piscina({
 });
 
 export async function reserveCalculator(req: AuthenticatedRequest, res: Response) {
-  const user: any = req.user; // ✅ always defined here
-  const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
-
-  const scenarios: Scenario[] = req.body;
-  const assumptionId: any = assumptions[0].assumptionId;
-  // const policySummaries = createPolicySummaryArray(1201);
-  let skippedPolicies = 0;
-  let successfulPolicies = 0;
-  let reserveResultId;
-
   try {
+    const user: any = req.user; // ✅ always defined here
+    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
+
+    const scenarios: Scenario[] = req.body;
+    const assumptionId: any = assumptions[0].assumptionId;
+    // const policySummaries = createPolicySummaryArray(1201);
+    let skippedPolicies = 0;
+    let successfulPolicies = 0;
+    let reserveResultId;
     let product = findProductByScenario(assumptions, scenarios[0].scenarioCode);
     product = normalizeProductPercents(product);
     const mortalityRates = loadRates(assumptions, product['Mortality Table Number']);
@@ -143,18 +146,19 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     });
     reserveResultId = reserveResult._id;
     await reserveResult.save();
+
+    res.sendCustomResponse(200, {
+      data: {
+        skippedPolicies,
+        successfulPolicies,
+        outputFile: `${process.env.VITE_API_BASE_URL}/download/output/${reserveResultId}`,
+        cashflows: `${process.env.VITE_API_BASE_URL}/download/cashflow/${reserveResultId}`,
+      },
+    });
   } catch (error: any) {
     console.log(error);
-
-    skippedPolicies += 1;
+    res.sendCustomResponse(500, { message: 'internal server error', data: null });
+    return;
+    // skippedPolicies += 1;
   }
-
-  res.sendCustomResponse(200, {
-    data: {
-      skippedPolicies,
-      successfulPolicies,
-      outputFile: `${process.env.VITE_API_BASE_URL}/download/output/${reserveResultId}`,
-      cashflows: `${process.env.VITE_API_BASE_URL}/download/cashflow/${reserveResultId}`,
-    },
-  });
 }

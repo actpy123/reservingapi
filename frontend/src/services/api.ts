@@ -1,5 +1,5 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
+const API_BASE_URL ="http://localhost:3000/api/reserve";
+  // import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api/reserve";
 
 export interface Assumption {
   name: string;
@@ -26,9 +26,49 @@ export interface Scenario {
 }
 
 export class ApiService {
+  private static token: string | null = null;
+
+  static async login(email: string, password: string) {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailAddress: email,
+        password: password,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Login failed");
+    }
+
+    const data = await response.json();
+
+    ApiService.token = data.token; // ✅ store in class
+    localStorage.setItem("authToken", data.token); // optional persistence
+    return data;
+  }
+
+  private static getAuthHeaders(): HeadersInit {
+    if (!ApiService.token) {
+      return {};
+    }
+
+    console.log("token", ApiService.token);
+    return {
+      Authorization: `Bearer ${ApiService.token}`,
+    };
+  }
+
   static async getAssumptions(): Promise<Assumption[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/assumptions`);
+      const response = await fetch(`${API_BASE_URL}/assumptions`, {
+        headers: {
+          ...ApiService.getAuthHeaders(),
+        },
+      });
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const result: ApiResponse<{ files: Assumption[] }> =
@@ -151,22 +191,24 @@ export class ApiService {
     if (!Array.isArray(assumptions) || assumptions.length === 0) {
       return [];
     }
-    
+
     return assumptions.map((assumptionItem) => {
-      if (!assumptionItem || typeof assumptionItem !== 'object') {
+      if (!assumptionItem || typeof assumptionItem !== "object") {
         return assumptionItem;
       }
-      
+
       if (
         assumptionItem.name &&
-        typeof assumptionItem.name === 'string' &&
+        typeof assumptionItem.name === "string" &&
         (assumptionItem.name.toLowerCase().includes("mortality") ||
           assumptionItem.name.toLowerCase().includes("morbidity") ||
           assumptionItem.name.toLowerCase().includes("lapse") ||
           assumptionItem.name.toLowerCase().includes("rate") ||
           assumptionItem.name.toLowerCase().includes("table"))
       ) {
-        const transformed = ApiService.transformMortalityRates(assumptionItem.data || []);
+        const transformed = ApiService.transformMortalityRates(
+          assumptionItem.data || []
+        );
         return {
           ...assumptionItem,
           data: ApiService.createBackendCompatibleRates(transformed),
@@ -184,6 +226,9 @@ export class ApiService {
       formData.append("files", file);
       const response = await fetch(`${API_BASE_URL}/assumptions`, {
         method: "POST",
+        headers: {
+          ...ApiService.getAuthHeaders(),
+        },
         body: formData,
       });
       if (!response.ok)
@@ -192,12 +237,13 @@ export class ApiService {
         await response.json();
       if (!result.success || !result.data)
         throw new Error(result.message || "Upload failed");
-      
+
       // Safely handle the files array
       const files = result.data?.files || [];
-      const transformedFiles = Array.isArray(files) && files.length > 0 
-        ? ApiService.transformRateTables(files)
-        : [];
+      const transformedFiles =
+        Array.isArray(files) && files.length > 0
+          ? ApiService.transformRateTables(files)
+          : [];
 
       return {
         ...result.data,
@@ -215,7 +261,10 @@ export class ApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/reserve-calculator`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...ApiService.getAuthHeaders(),
+        },
         body: JSON.stringify(scenarios),
       });
       if (!response.ok) {
