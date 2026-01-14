@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc && tsc-alias",
-    "start": "node -r module-alias/register dist/app.js"
+    "start": "node -r module-alias/register dist/app.js",
+    "migrate:create": "ts-migrate-mongoose create",
+    "migrate:up": "ts-migrate-mongoose up",
+    "migrate:down": "ts-migrate-mongoose down"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
