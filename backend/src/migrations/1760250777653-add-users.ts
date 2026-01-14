@@ -10,7 +10,7 @@ export async function up(connection: Connection): Promise<void> {
     firstName: 'Super',
     lastName: 'Admin',
     password: 'SuperAdmin2wq!',
-    emailAddress: 'sa@actpy.co',
+    emailAddress: 'sa@actpy.com',
     isAdmin: true,
   });
   await doc.validate();
