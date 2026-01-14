@@ -12,6 +12,6 @@ build:
 	mkdir -p ./dist/public
 	cd frontend && \
 		npm install --force && \
-		echo "VITE_API_BASE_URL=https://reserve.actpy.com/api/reserve" > .env && \
+		echo "VITE_API_BASE_URL=https://reserve.actpy.com/api" > .env && \
 		npm run build && \
 		cp -r ./dist/* ../dist/public
