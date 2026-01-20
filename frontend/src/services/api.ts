@@ -1,3 +1,5 @@
+import { apiFetch } from "../interceptor/auth.interceptor";
+
 // const API_BASE_URL = "http://localhost:3000/api";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api";
@@ -52,36 +54,17 @@ export class ApiService {
     return data;
   }
 
-  private static getAuthHeaders(): HeadersInit {
-    if (!ApiService.token) {
-      return {};
-    }
-
-    console.log("token", ApiService.token);
-    return {
-      Authorization: `Bearer ${ApiService.token}`,
-    };
-  }
-
   static async getAssumptions(): Promise<Assumption[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserve/assumptions`, {
-        headers: {
-          ...ApiService.getAuthHeaders(),
-        },
-      });
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await apiFetch(`${API_BASE_URL}/reserve/assumptions`);
       const result: ApiResponse<{ files: Assumption[] }> =
         await response.json();
       const files = result.data?.files || [];
-
       if (!Array.isArray(files) || files.length === 0) {
         return [];
       }
-
       return ApiService.transformRateTables(files).sort((a, b) =>
-        a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0
+        a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0,
       );
     } catch (error) {
       console.error("Error fetching assumptions:", error);
@@ -113,8 +96,8 @@ export class ApiService {
               gender.toString().toLowerCase() === "male"
                 ? "Male"
                 : gender.toString().toLowerCase() === "female"
-                ? "Female"
-                : gender.toString();
+                  ? "Female"
+                  : gender.toString();
             transformed[age][genderKey] =
               rate.Rate || rate.rate || rate.Value || rate.value || 0;
           }
@@ -128,21 +111,21 @@ export class ApiService {
         (key) =>
           key.toLowerCase().includes("age") ||
           key.toLowerCase() === "x" ||
-          key.toLowerCase() === "age_x"
+          key.toLowerCase() === "age_x",
       );
       const genderKey = keys.find(
         (key) =>
           key.toLowerCase().includes("gender") ||
           key.toLowerCase().includes("sex") ||
           key.toLowerCase() === "y" ||
-          key.toLowerCase() === "gender_y"
+          key.toLowerCase() === "gender_y",
       );
       const rateKey = keys.find(
         (key) =>
           key.toLowerCase().includes("rate") ||
           key.toLowerCase().includes("value") ||
           key.toLowerCase().includes("qx") ||
-          key.toLowerCase().includes("mortality")
+          key.toLowerCase().includes("mortality"),
       );
 
       if (ageKey && genderKey && rateKey) {
@@ -158,8 +141,8 @@ export class ApiService {
                 gender.toString().toLowerCase() === "male"
                   ? "Male"
                   : gender.toString().toLowerCase() === "female"
-                  ? "Female"
-                  : gender.toString();
+                    ? "Female"
+                    : gender.toString();
               transformed[age][genderKeyFormatted] =
                 parseFloat(rate[rateKey]) || 0;
             }
@@ -208,7 +191,7 @@ export class ApiService {
           assumptionItem.name.toLowerCase().includes("table"))
       ) {
         const transformed = ApiService.transformMortalityRates(
-          assumptionItem.data || []
+          assumptionItem.data || [],
         );
         return {
           ...assumptionItem,
@@ -220,16 +203,13 @@ export class ApiService {
   }
 
   static async uploadAssumptions(
-    file: File
+    file: File,
   ): Promise<{ files: Assumption[]; assumptionId: string }> {
     try {
       const formData = new FormData();
       formData.append("files", file);
-      const response = await fetch(`${API_BASE_URL}/reserve/assumptions`, {
+      const response = await apiFetch(`${API_BASE_URL}/reserve/assumptions`, {
         method: "POST",
-        headers: {
-          ...ApiService.getAuthHeaders(),
-        },
         body: formData,
       });
       if (!response.ok)
@@ -257,24 +237,23 @@ export class ApiService {
   }
 
   static async calculateReserve(
-    scenarios: Scenario[]
+    scenarios: Scenario[],
   ): Promise<ReserveCalculationResult> {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_BASE_URL}/reserve/reserve-calculator`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...ApiService.getAuthHeaders(),
           },
           body: JSON.stringify(scenarios),
-        }
+        },
       );
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
-          `HTTP error! status: ${response.status} - ${errorText}`
+          `HTTP error! status: ${response.status} - ${errorText}`,
         );
       }
       const result: ApiResponse<ReserveCalculationResult> =
@@ -297,7 +276,7 @@ export class ApiService {
     try {
       const assumptions = await this.getAssumptions();
       const productMaster = assumptions.find(
-        (a) => a.name === "product_master"
+        (a) => a.name === "product_master",
       );
       if (!productMaster?.data?.length) {
         return {
@@ -307,7 +286,7 @@ export class ApiService {
         };
       }
       const product = productMaster.data.find(
-        (p) => p["Scenario Code"] === scenarioCode
+        (p) => p["Scenario Code"] === scenarioCode,
       );
       if (!product) {
         const availableCodes = productMaster.data
@@ -349,5 +328,31 @@ export class ApiService {
 
   static getCashflowDownloadUrl(id: string): string {
     return `${API_BASE_URL}/reserve/download/cashflow/${id}`;
+  }
+
+  static async getControlSheets() {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/control-sheets`);
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch control sheets`);
+    }
+
+    return res.json();
+  }
+
+  static async createSessionSimulation(data: any) {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/save`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ data }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch control sheets`);
+    }
+
+    return res.json();
   }
 }

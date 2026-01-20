@@ -1,22 +1,29 @@
-import { model, Schema, Document, Types } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 
 interface ReserveResult {
+  // controlSheetId: Schema.Types.Mixed;
   assumptionId: string;
-  scenarioCode?: any;
-  output?: any[]; // You can type this if you know the exact structure
-  cashflow?: any[]; // You can type this if you know the exact structure
+  scenarioCode?: string;
+  output?: any[];
+  cashflow?: any[];
 }
 
 export interface ReserveResultDocument extends ReserveResult, Document {}
 
 const ReserveResults = new Schema<ReserveResultDocument>(
   {
-    scenarioCode: { type: String },
+    // controlSheetId: {
+    //   type: Types.ObjectId,
+    //   ref: 'ControlSheet',
+    //   required: true,
+    //   unique: true, // one result per control sheet
+    // },
     assumptionId: { type: String, required: true },
-    output: { type: [Schema.Types.Mixed] }, // Allows any type inside the array
-    cashflow: { type: [Schema.Types.Mixed] }, // Allows any type inside the array
+    scenarioCode: { type: String },
+    output: { type: [Schema.Types.Mixed] },
+    cashflow: { type: [Schema.Types.Mixed] },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const ReserveResultModel = model<ReserveResultDocument>('ReserveResults', ReserveResults);

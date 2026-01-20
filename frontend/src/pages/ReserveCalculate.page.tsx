@@ -6,6 +6,7 @@ import { parseCsvToObjects } from "../utils/csv.utils";
 import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
+import { apiFetch } from "../interceptor/auth.interceptor";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -173,11 +174,7 @@ const ReserveCalculatePage: React.FC = () => {
   };
 
   const handleDownload = async (url: string, filename?: string) => {
-    const response = await fetch(url, {
-      headers: {
-        ...ApiService.getAuthHeaders(),
-      },
-    });
+    const response = await apiFetch(url);
 
     if (!response.ok) {
       throw new Error(
@@ -298,14 +295,15 @@ const ReserveCalculatePage: React.FC = () => {
                     }
                   >
                     {row.inputFilePath ? (
-                      <a
-                        href={row.inputFilePath}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(row.inputFilePath, "reserve-output")
+                        }
+                        className="text-blue-600 hover:underline bg-transparent p-0 border-0 cursor-pointer"
                       >
                         {row.inputFilePath}
-                      </a>
+                      </button>
                     ) : (
                       <span>{row.inputFile?.name || "-"}</span>
                     )}
@@ -315,14 +313,15 @@ const ReserveCalculatePage: React.FC = () => {
                     title={row.outputFilePath || ""}
                   >
                     {row.outputFilePath ? (
-                      <a
-                        href={row.outputFilePath}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(row.outputFilePath, "reserve-output")
+                        }
+                        className="text-blue-600 hover:underline bg-transparent p-0 border-0 cursor-pointer"
                       >
                         {row.outputFilePath}
-                      </a>
+                      </button>
                     ) : (
                       <span>-</span>
                     )}
@@ -377,24 +376,26 @@ const ReserveCalculatePage: React.FC = () => {
                         Run
                       </button>
                       {ApiService.isValidUrl(row.outputUrl) && (
-                        <a
-                          href={row.outputUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDownload(row.outputUrl!, "reserve-output.csv")
+                          }
                           className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full border border-green-600 shadow-sm"
                         >
                           Download Output
-                        </a>
+                        </button>
                       )}
                       {ApiService.isValidUrl(row.cashflowUrl) && (
-                        <a
-                          href={row.cashflowUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDownload(row.cashflowUrl!, "cashflow.csv")
+                          }
                           className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full border border-blue-600 shadow-sm"
                         >
                           Download Cashflow
-                        </a>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -403,9 +404,7 @@ const ReserveCalculatePage: React.FC = () => {
             </div>
           )}
         </div>
-     
       </div>
-
 
       {isFormOpen && (
         <ControlSheetForm
