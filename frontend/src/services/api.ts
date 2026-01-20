@@ -52,7 +52,7 @@ export class ApiService {
     return data;
   }
 
-  private static getAuthHeaders(): HeadersInit {
+  static getAuthHeaders(): HeadersInit {
     if (!ApiService.token) {
       return {};
     }
@@ -81,7 +81,7 @@ export class ApiService {
       }
 
       return ApiService.transformRateTables(files).sort((a, b) =>
-        a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0
+        a.name === "product_master" ? -1 : b.name === "product_master" ? 1 : 0,
       );
     } catch (error) {
       console.error("Error fetching assumptions:", error);
@@ -113,8 +113,8 @@ export class ApiService {
               gender.toString().toLowerCase() === "male"
                 ? "Male"
                 : gender.toString().toLowerCase() === "female"
-                ? "Female"
-                : gender.toString();
+                  ? "Female"
+                  : gender.toString();
             transformed[age][genderKey] =
               rate.Rate || rate.rate || rate.Value || rate.value || 0;
           }
@@ -128,21 +128,21 @@ export class ApiService {
         (key) =>
           key.toLowerCase().includes("age") ||
           key.toLowerCase() === "x" ||
-          key.toLowerCase() === "age_x"
+          key.toLowerCase() === "age_x",
       );
       const genderKey = keys.find(
         (key) =>
           key.toLowerCase().includes("gender") ||
           key.toLowerCase().includes("sex") ||
           key.toLowerCase() === "y" ||
-          key.toLowerCase() === "gender_y"
+          key.toLowerCase() === "gender_y",
       );
       const rateKey = keys.find(
         (key) =>
           key.toLowerCase().includes("rate") ||
           key.toLowerCase().includes("value") ||
           key.toLowerCase().includes("qx") ||
-          key.toLowerCase().includes("mortality")
+          key.toLowerCase().includes("mortality"),
       );
 
       if (ageKey && genderKey && rateKey) {
@@ -158,8 +158,8 @@ export class ApiService {
                 gender.toString().toLowerCase() === "male"
                   ? "Male"
                   : gender.toString().toLowerCase() === "female"
-                  ? "Female"
-                  : gender.toString();
+                    ? "Female"
+                    : gender.toString();
               transformed[age][genderKeyFormatted] =
                 parseFloat(rate[rateKey]) || 0;
             }
@@ -208,7 +208,7 @@ export class ApiService {
           assumptionItem.name.toLowerCase().includes("table"))
       ) {
         const transformed = ApiService.transformMortalityRates(
-          assumptionItem.data || []
+          assumptionItem.data || [],
         );
         return {
           ...assumptionItem,
@@ -220,7 +220,7 @@ export class ApiService {
   }
 
   static async uploadAssumptions(
-    file: File
+    file: File,
   ): Promise<{ files: Assumption[]; assumptionId: string }> {
     try {
       const formData = new FormData();
@@ -257,7 +257,7 @@ export class ApiService {
   }
 
   static async calculateReserve(
-    scenarios: Scenario[]
+    scenarios: Scenario[],
   ): Promise<ReserveCalculationResult> {
     try {
       const response = await fetch(
@@ -269,12 +269,12 @@ export class ApiService {
             ...ApiService.getAuthHeaders(),
           },
           body: JSON.stringify(scenarios),
-        }
+        },
       );
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
-          `HTTP error! status: ${response.status} - ${errorText}`
+          `HTTP error! status: ${response.status} - ${errorText}`,
         );
       }
       const result: ApiResponse<ReserveCalculationResult> =
@@ -297,7 +297,7 @@ export class ApiService {
     try {
       const assumptions = await this.getAssumptions();
       const productMaster = assumptions.find(
-        (a) => a.name === "product_master"
+        (a) => a.name === "product_master",
       );
       if (!productMaster?.data?.length) {
         return {
@@ -307,7 +307,7 @@ export class ApiService {
         };
       }
       const product = productMaster.data.find(
-        (p) => p["Scenario Code"] === scenarioCode
+        (p) => p["Scenario Code"] === scenarioCode,
       );
       if (!product) {
         const availableCodes = productMaster.data
