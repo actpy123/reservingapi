@@ -12,7 +12,9 @@ import { resolve } from 'path';
 import Piscina from 'piscina';
 import { ReserveResultModel } from '@models/reserve-result.model';
 import { AuthenticatedRequest } from '@middlewares/authenticateMiddleware';
-import { UserModel, UserType } from '@models/user.model';
+import { SessionSimulation } from '@models/session.model';
+import { ControlSheet } from '@models/control-sheet.model';
+import { Types } from 'mongoose';
 
 export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Response) {
   try {
@@ -117,7 +119,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
         interestRates,
         gsvRates,
         ssvRates,
-      })
+      }),
     );
 
     const results = await Promise.allSettled(promises);
@@ -160,5 +162,121 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     res.sendCustomResponse(500, { message: 'internal server error', data: null });
     return;
     // skippedPolicies += 1;
+  }
+}
+
+export async function createSessionSimulation(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user;
+  console.log(req.body);
+  const { scenarioCode, inputFilePath, sessionId } = req.body;
+
+  try {
+    let session;
+
+    if (sessionId) {
+      session = await SessionSimulation.findOne({
+        _id: sessionId,
+        userId: user._id,
+      });
+
+      if (!session) {
+        res.sendCustomResponse(400, { message: `session not found` });
+        return;
+      }
+    } else {
+      session = await SessionSimulation.create({
+        userId: user._id,
+      });
+    }
+    const controlSheet = await ControlSheet.create({
+      sessionId: session._id,
+      scenarioCode,
+      inputFilePath,
+      execution: 'pending', // default until execution finishes
+    });
+
+    res.sendCustomResponse(200, { data: { session, controlSheet } });
+    return;
+  } catch (error) {
+    console.error('createSessionSimulation error:', error);
+    res.sendCustomResponse(500, { message: 'internal server error' });
+  }
+}
+
+export async function controlSheet(req: AuthenticatedRequest, res: Response) {
+  try {
+    const sessionId = req.params.id;
+    const user: any = req.user;
+
+    // Optional: verify session belongs to user
+    const session = await SessionSimulation.findOne({
+      _id: sessionId,
+      userId: user._id,
+    });
+
+    console.log('session', session);
+    if (!session) {
+      return res.sendCustomResponse(400, { message: 'Session not found' });
+    }
+
+    // Fetch control sheets for this session + user
+    const controlSheets = await ControlSheet.find({
+      sessionId,
+    });
+    res.sendCustomResponse(200, { data: { controlSheet } });
+    return;
+  } catch (error) {
+    console.error('sessionsimulation error:', error);
+    res.sendCustomResponse(500, { message: 'internal server error' });
+  }
+}
+
+export async function getAllUserControlSheets(req: AuthenticatedRequest, res: Response) {
+  try {
+    const user: any = req.user;
+
+    // 1. Get all session IDs belonging to the user
+    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1 });
+
+    if (!sessions.length) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          controlSheets: [],
+        },
+      });
+    }
+
+    const sessionIds = sessions.map((s) => s._id);
+
+    // 2. Fetch all control sheets for those sessions
+    const controlSheets = await ControlSheet.find({
+      sessionId: { $in: sessionIds },
+    }).sort({ createdAt: -1 }); // optional
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        controlSheets,
+      },
+    });
+  } catch (error) {
+    console.error('getAllUserControlSheets error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+}
+
+export async function getAllSessionName(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user;
+  try {
+    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1, name: 1 });
+    const data = sessions.map((session) => ({ id: session._id, name: session.name }));
+    res.sendCustomResponse(200, { data: data });
+  } catch (error) {
+    console.log('error', error);
+    res.sendCustomResponse(500, { message: `internal server error ${error}` });
   }
 }
