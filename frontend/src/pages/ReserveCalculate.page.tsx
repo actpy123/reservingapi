@@ -139,7 +139,7 @@ const ReserveCalculatePage: React.FC = () => {
                 progress: 100,
                 outputUrl,
                 cashflowUrl,
-                outputFilePath: (result as any).outputFile || outputUrl || "",
+                outputFilePath: result.outputFile || outputUrl || "",
                 execSeconds,
                 successfulPolicies: result.successfulPolicies,
                 skippedPolicies: result.skippedPolicies,
