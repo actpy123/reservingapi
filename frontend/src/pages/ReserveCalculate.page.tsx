@@ -6,6 +6,7 @@ import { parseCsvToObjects } from "../utils/csv.utils";
 import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
+import { apiFetch } from "../interceptor/auth.interceptor";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -173,11 +174,7 @@ const ReserveCalculatePage: React.FC = () => {
   };
 
   const handleDownload = async (url: string, filename?: string) => {
-    const response = await fetch(url, {
-      headers: {
-        ...ApiService.getAuthHeaders(),
-      },
-    });
+    const response = await apiFetch(url);
 
     if (!response.ok) {
       throw new Error(
@@ -301,11 +298,11 @@ const ReserveCalculatePage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          handleDownload(row.outputFilePath, "reserve-output")
+                          handleDownload(row.inputFilePath, "reserve-output")
                         }
                         className="text-blue-600 hover:underline bg-transparent p-0 border-0 cursor-pointer"
                       >
-                        {row.outputFilePath}
+                        {row.inputFilePath}
                       </button>
                     ) : (
                       <span>{row.inputFile?.name || "-"}</span>
@@ -316,14 +313,15 @@ const ReserveCalculatePage: React.FC = () => {
                     title={row.outputFilePath || ""}
                   >
                     {row.outputFilePath ? (
-                      <a
-                        href={row.outputFilePath}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDownload(row.outputFilePath, "reserve-output")
+                        }
+                        className="text-blue-600 hover:underline bg-transparent p-0 border-0 cursor-pointer"
                       >
                         {row.outputFilePath}
-                      </a>
+                      </button>
                     ) : (
                       <span>-</span>
                     )}
