@@ -4,7 +4,10 @@
   height: 100%;
   color: rgb(55 65 81 / var(--tw-text-opacity, 1));
   padding: 8px 0;
-
+  & > button {
+    margin: 16px;
+    width: calc(100% - 32px);
+  }
   & > .title {
     display: flex;
     gap: 8px;

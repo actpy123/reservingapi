@@ -355,4 +355,19 @@ export class ApiService {
 
     return res.json();
   }
+
+  static async getSessions() {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/sessions`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "GET",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch control sheets`);
+    }
+
+    return res.json();
+  }
 }

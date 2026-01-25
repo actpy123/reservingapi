@@ -15,4 +15,9 @@ export interface ControlSheet {
   skippedPolicies?: number;
 }
 
-
+export enum LOADING_STATUS {
+  IDLE = 0,
+  LOADING = 1,
+  LOADED = 2,
+  ERROR = 3,
+}
