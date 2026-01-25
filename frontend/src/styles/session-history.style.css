@@ -5,7 +5,7 @@
   color: rgb(55 65 81 / var(--tw-text-opacity, 1));
   padding: 8px 0;
   & > button {
-    margin: 16px;
+    margin: 24px;
     width: calc(100% - 32px);
   }
   & > .title {
@@ -70,8 +70,8 @@
       }
 
       &.selected {
-        background-color: rgb(234 88 12 / var(--tw-bg-opacity, 1));
-        color: #fff;
+        background-color: #e5e7eb;
+        color: rgb(234 88 12 / var(--tw-bg-opacity, 1));
         cursor: default;
       }
     }
