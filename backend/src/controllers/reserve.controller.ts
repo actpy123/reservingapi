@@ -223,7 +223,7 @@ export async function controlSheet(req: AuthenticatedRequest, res: Response) {
     const controlSheets = await ControlSheet.find({
       sessionId,
     });
-    res.sendCustomResponse(200, { data: controlSheet  });
+    res.sendCustomResponse(200, { data: controlSheets  });
     return;
   } catch (error) {
     console.error('sessionsimulation error:', error);
