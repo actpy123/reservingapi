@@ -5,11 +5,26 @@ import { LOADING_STATUS } from "../types/controlSheet";
 
 type Session = {
   name: string;
+  id: string;
 };
-function SessionHistory() {
+
+type SessionHistoryProps = {
+  onSessionSelect: (sessionId: string) => void;
+  onNewSession: () => void;
+};
+
+function SessionHistory({
+  onSessionSelect,
+  onNewSession,
+}: SessionHistoryProps) {
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
-    LOADING_STATUS.IDLE,
+    LOADING_STATUS.IDLE
+  );
+  const [showUnsavedSession, setShowUnsavedSession] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
   );
 
   useEffect(() => {
@@ -17,59 +32,89 @@ function SessionHistory() {
       setSessionsApiStatus(LOADING_STATUS.LOADING);
       ApiService.getSessions()
         .then((res) => {
+          const sessionList = res.data as Session[];
+          setSessions(sessionList);
           setSessionsApiStatus(LOADING_STATUS.LOADED);
-          setSessions(res.data as Session[]);
+
+          // auto-select latest session once
+          if (sessionList.length > 0 && !hasAutoSelected) {
+            onSessionSelect(sessionList[0].id);
+            setSelectedSessionId(sessionList[0].id);
+            setHasAutoSelected(true);
+          }
         })
         .catch(() => {
           setSessionsApiStatus(LOADING_STATUS.ERROR);
         });
     }
-  }, [sessions, sessionsApiStatus]);
+  }, [sessionsApiStatus, hasAutoSelected, onSessionSelect]);
 
   const renderSessionList = () => {
-    if (Array.isArray(sessions) && sessions.length) {
-      return sessions.map((session) => {
-        return (
-          <div className="item">
-            <span className="title">{session.name}</span>
-            <button>
-              <span className="material-symbols-outlined">more_vert</span>
-            </button>
-          </div>
-        );
-      });
-    }
-    return null;
+    if (!Array.isArray(sessions)) return null;
+
+    return sessions.map((session) => {
+      const isSelected = selectedSessionId === session.id;
+
+      return (
+        <div
+          key={session.id}
+          className={`item ${isSelected ? "selected" : ""}`}
+        >
+          <span
+            className="title"
+            onClick={() => {
+              setSelectedSessionId(session.id);
+              onSessionSelect(session.id);
+            }}
+          >
+            {session.name}
+          </span>
+          <button>
+            <span className="material-symbols-outlined">more_vert</span>
+          </button>
+        </div>
+      );
+    });
   };
 
   return (
     <div className="session-history">
       <button
-        className="bg-orange-500 text-white px-2 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
-        style={{
-          fontSize: 14,
+        onClick={() => {
+          setShowUnsavedSession(true);
+          setSelectedSessionId(null); // unsaved becomes active
+          onNewSession();
         }}
+        className="bg-orange-500 text-white px-2 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
+        style={{ fontSize: 14 }}
       >
         + New Session
       </button>
+
       <div className="title">
         <span className="material-symbols-outlined">view_headline</span>
         <h2>Your Sessions</h2>
       </div>
+
       <div className="session-list">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          <div className="item selected">
-            <span className="title">unsaved session</span>
-            <button>
-              <span className="material-symbols-outlined">more_vert</span>
-            </button>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {showUnsavedSession && (
+            <div
+              className={`item ${
+                selectedSessionId === null ? "selected" : ""
+              }`}
+              onClick={() => {
+                setSelectedSessionId(null); // go back to unsaved
+                onNewSession();
+              }}
+            >
+              <span className="title">unsaved session</span>
+              <button>
+                <span className="material-symbols-outlined">more_vert</span>
+              </button>
+            </div>
+          )}
+
           {renderSessionList()}
         </div>
       </div>

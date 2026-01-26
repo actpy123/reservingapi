@@ -11,6 +11,10 @@ import { apiFetch } from "../interceptor/auth.interceptor";
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
+
   const backendStatus = useBackendStatus();
 
   const handleControlSheet = () => setIsFormOpen(true);
@@ -195,6 +199,44 @@ const ReserveCalculatePage: React.FC = () => {
     URL.revokeObjectURL(objectUrl);
   };
 
+  const handleSessionSelect = async (sessionId: string) => {
+    try {
+      setSelectedSessionId(sessionId);
+      const res = await ApiService.getControlSheets(sessionId);
+      setControlSheets(
+        res.data.map((item: any, index: number) => ({
+          id: item._id, // required
+          runNo: String(index + 1), // or backend runNo if exists
+          productCode: item.scenarioCode, // mapping
+          runIndicator: "Yes", // default (or backend later)
+          inputFilePath: item.inputFilePath,
+          inputFile: null, // backend file already stored
+          outputFilePath: "", // not available yet
+          execution: item.execution ?? "Pending",
+          progress:
+            item.execution === "completed"
+              ? 100
+              : item.execution === "running"
+                ? 50
+                : 0,
+          execSeconds: undefined,
+          successfulPolicies: undefined,
+          skippedPolicies: undefined,
+          outputUrl: undefined,
+          cashflowUrl: undefined,
+        })),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load control sheets for this session");
+    }
+  };
+
+  const handleNewSession = () => {
+    setSelectedSessionId(null);
+    setControlSheets([]);
+  };
+
   return (
     <div
       style={{
@@ -202,7 +244,7 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
-        <SessionHistory />
+        <SessionHistory onSessionSelect={handleSessionSelect} onNewSession={handleNewSession} />
       </div>
       <div style={{ padding: "16px" }}>
         <div className="flex items-center justify-between mb-6">
@@ -408,6 +450,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       {isFormOpen && (
         <ControlSheetForm
+          {...(selectedSessionId ? { sessionId: selectedSessionId } : {})}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
         />

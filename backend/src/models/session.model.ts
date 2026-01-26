@@ -9,7 +9,7 @@ const sessionSimulationSchema = new Schema(
     },
     name: {
       type: String,
-      default: () => new Date().toISOString(),
+      default: getLocalDateTimeName,
     },
   },
   { timestamps: true }
@@ -19,3 +19,14 @@ export const SessionSimulation = model(
   "SessionSimulation",
   sessionSimulationSchema
 );
+
+function getLocalDateTimeName() {
+  return new Date().toLocaleString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}

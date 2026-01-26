@@ -1,8 +1,8 @@
 import { apiFetch } from "../interceptor/auth.interceptor";
 
-// const API_BASE_URL = "http://localhost:3000/api";
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api";
+const API_BASE_URL = "http://localhost:3000/api";
+// const API_BASE_URL =
+//   import.meta.env.VITE_API_BASE_URL ?? "https://reserve.actpy.com/api";
 
 export interface Assumption {
   name: string;
@@ -330,8 +330,8 @@ export class ApiService {
     return `${API_BASE_URL}/reserve/download/cashflow/${id}`;
   }
 
-  static async getControlSheets() {
-    const res = await apiFetch(`${API_BASE_URL}/reserve/control-sheets`);
+  static async getControlSheets(id:string) {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/control/${id}`);
 
     if (!res.ok) {
       throw new Error(`Failed to fetch control sheets`);
@@ -346,7 +346,7 @@ export class ApiService {
         "Content-Type": "application/json",
       },
       method: "POST",
-      body: JSON.stringify({ data }),
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {

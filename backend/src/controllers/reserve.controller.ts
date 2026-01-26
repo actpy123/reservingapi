@@ -272,7 +272,7 @@ export async function getAllUserControlSheets(req: AuthenticatedRequest, res: Re
 export async function getAllSessionName(req: AuthenticatedRequest, res: Response) {
   const user: any = req.user;
   try {
-    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1, name: 1 });
+    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1, name: 1 }).sort({createdAt:-1});
     const data = sessions.map((session) => ({ id: session._id, name: session.name }));
     res.sendCustomResponse(200, { data: data });
   } catch (error) {
