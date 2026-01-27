@@ -3,7 +3,7 @@ import { ApiService } from "../services/api";
 import { useFileHandler } from "../hooks";
 
 interface ControlSheetFormProps {
-  sessionId?: string; // 👈 NEW
+  sessionId?: string; 
   onSubmit: (data: any) => void;
   onClose: () => void;
 }
@@ -63,7 +63,7 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
     console.log('sessionId',sessionId);
     const res = await ApiService.createSessionSimulation({
       ...formData,
-      sessionId, // 👈 THIS IS THE KEY LINE
+      sessionId, 
       inputFilePath: `${inputFileHandler.selectedFile?.name}`,
       scenarioCode: formData.productCode,
     });
@@ -77,7 +77,7 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
       inputFile: inputFileHandler.selectedFile,
       sessionId:createdSessionId
     });
-    
+
     setIsSubmitting(false);
   };
 

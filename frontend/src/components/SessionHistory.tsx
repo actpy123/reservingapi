@@ -21,7 +21,7 @@ function SessionHistory({
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
     LOADING_STATUS.IDLE
   );
-  const [showUnsavedSession, setShowUnsavedSession] = useState(false);
+  const [showUnsavedSession, setShowUnsavedSession] = useState(true);
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
@@ -36,12 +36,12 @@ function SessionHistory({
           setSessions(sessionList);
           setSessionsApiStatus(LOADING_STATUS.LOADED);
 
-          // auto-select latest session once
-          if (sessionList.length > 0 && !hasAutoSelected) {
-            onSessionSelect(sessionList[0].id);
-            setSelectedSessionId(sessionList[0].id);
-            setHasAutoSelected(true);
-          }
+          // // auto-select latest session once
+          // if (sessionList.length > 0 && !hasAutoSelected) {
+          //   onSessionSelect(sessionList[0].id);
+          //   setSelectedSessionId(sessionList[0].id);
+          //   setHasAutoSelected(true);
+          // }
         })
         .catch(() => {
           setSessionsApiStatus(LOADING_STATUS.ERROR);
