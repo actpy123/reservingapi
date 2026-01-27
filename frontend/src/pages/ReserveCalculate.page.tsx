@@ -7,6 +7,7 @@ import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
+import { useNavigate } from "react-router-dom";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -16,6 +17,7 @@ const ReserveCalculatePage: React.FC = () => {
   );
 
   const backendStatus = useBackendStatus();
+  const navigate = useNavigate();
 
   const handleControlSheet = () => setIsFormOpen(true);
   const handleFormClose = () => setIsFormOpen(false);
@@ -43,6 +45,7 @@ const ReserveCalculatePage: React.FC = () => {
   };
 
   const runReserve = async (row: ControlSheet) => {
+    console.log('control sheet data', row);
     try {
       if (backendStatus === "offline") {
         alert(
@@ -50,6 +53,29 @@ const ReserveCalculatePage: React.FC = () => {
         );
         return;
       }
+
+      /** 🔹 MINIMAL ADDITION: create session if missing */
+      let sessionId = new URLSearchParams(window.location.search).get("session");
+      if (!sessionId) {
+        const res = await ApiService.createSessionSimulation({
+          scenarioCode: row.productCode,
+          inputFilePath:
+            row.inputFile instanceof File
+              ? row.inputFile.name
+              : row.inputFilePath,
+        });
+
+        sessionId = res.data.session._id;
+
+        setControlSheets((prev) =>
+          prev.map((r) => (r.id === row.id ? { ...r } : r)),
+        );
+
+        navigate(`${window.location.pathname}?session=${sessionId}`, {
+          replace: true,
+        });
+      }
+      /** 🔹 END minimal addition */
 
       const scenarioValidation = await ApiService.validateScenarioCode(
         String(row.productCode || "").trim(),
@@ -202,6 +228,9 @@ const ReserveCalculatePage: React.FC = () => {
   const handleSessionSelect = async (sessionId: string) => {
     try {
       setSelectedSessionId(sessionId);
+      navigate(`${window.location.pathname}?session=${sessionId}`, {
+        replace: true,
+      });
       const res = await ApiService.getControlSheets(sessionId);
       setControlSheets(
         res.data.map((item: any, index: number) => ({
@@ -235,6 +264,7 @@ const ReserveCalculatePage: React.FC = () => {
   const handleNewSession = () => {
     setSelectedSessionId(null);
     setControlSheets([]);
+    navigate(window.location.pathname, { replace: true });
   };
 
   return (
@@ -244,7 +274,10 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
-        <SessionHistory onSessionSelect={handleSessionSelect} onNewSession={handleNewSession} />
+        <SessionHistory
+          onSessionSelect={handleSessionSelect}
+          onNewSession={handleNewSession}
+        />
       </div>
       <div style={{ padding: "16px" }}>
         <div className="flex items-center justify-between mb-6">

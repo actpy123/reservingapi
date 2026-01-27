@@ -61,21 +61,21 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
     setIsSubmitting(true);
 
     console.log('sessionId',sessionId);
-    const res = await ApiService.createSessionSimulation({
-      ...formData,
-      sessionId, 
-      inputFilePath: `${inputFileHandler.selectedFile?.name}`,
-      scenarioCode: formData.productCode,
-    });
+    // const res = await ApiService.createSessionSimulation({
+    //   ...formData,
+    //   sessionId, 
+    //   inputFilePath: `${inputFileHandler.selectedFile?.name}`,
+    //   scenarioCode: formData.productCode,
+    // });
 
 
   // 👇 extract sessionId (backend creates it if missing)
-  const createdSessionId = res.data.session._id;
+  // const createdSessionId = res.data.session._id;
 
     await onSubmit({
       ...formData,
       inputFile: inputFileHandler.selectedFile,
-      sessionId:createdSessionId
+      // sessionId:createdSessionId
     });
 
     setIsSubmitting(false);

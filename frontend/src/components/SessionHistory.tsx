@@ -19,14 +19,14 @@ function SessionHistory({
 }: SessionHistoryProps) {
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
-    LOADING_STATUS.IDLE
+    LOADING_STATUS.IDLE,
   );
   const [showUnsavedSession, setShowUnsavedSession] = useState(true);
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null
+    null,
   );
-
+ 
   useEffect(() => {
     if (sessionsApiStatus === LOADING_STATUS.IDLE) {
       setSessionsApiStatus(LOADING_STATUS.LOADING);
@@ -36,12 +36,15 @@ function SessionHistory({
           setSessions(sessionList);
           setSessionsApiStatus(LOADING_STATUS.LOADED);
 
-          // // auto-select latest session once
-          // if (sessionList.length > 0 && !hasAutoSelected) {
-          //   onSessionSelect(sessionList[0].id);
-          //   setSelectedSessionId(sessionList[0].id);
-          //   setHasAutoSelected(true);
-          // }
+          const params = new URLSearchParams(window.location.search);
+          const sessionIdFromUrl = params.get("session");
+          console.log('session from url',sessionIdFromUrl);
+          if (sessionIdFromUrl && sessionList.find((session)=>session.id===sessionIdFromUrl)) {
+            setSelectedSessionId(sessionIdFromUrl);
+            onSessionSelect(sessionIdFromUrl);
+            // setHasAutoSelected(true);
+            setShowUnsavedSession(false);
+          }
         })
         .catch(() => {
           setSessionsApiStatus(LOADING_STATUS.ERROR);
@@ -54,7 +57,7 @@ function SessionHistory({
 
     return sessions.map((session) => {
       const isSelected = selectedSessionId === session.id;
-
+      console.log('selected session',selectedSessionId);
       return (
         <div
           key={session.id}
@@ -100,9 +103,7 @@ function SessionHistory({
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {showUnsavedSession && (
             <div
-              className={`item ${
-                selectedSessionId === null ? "selected" : ""
-              }`}
+              className={`item ${selectedSessionId === null ? "selected" : ""}`}
               onClick={() => {
                 setSelectedSessionId(null); // go back to unsaved
                 onNewSession();
