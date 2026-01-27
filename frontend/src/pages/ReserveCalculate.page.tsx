@@ -7,9 +7,11 @@ import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
+import SaveSessionModal from "../components/SaveSessionModal";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSessionFormOpen, setIsSessionFormOpen] = useState(true);
   const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
   const backendStatus = useBackendStatus();
 
@@ -202,6 +204,12 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
+        <SaveSessionModal
+          open={isSessionFormOpen}
+          onClose={() => {
+            setIsSessionFormOpen(false);
+          }}
+        />
         <SessionHistory />
       </div>
       <div style={{ padding: "16px" }}>
