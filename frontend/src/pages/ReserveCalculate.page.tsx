@@ -75,6 +75,15 @@ const ReserveCalculatePage: React.FC = () => {
           replace: true,
         });
       }
+      else
+      { const res = await ApiService.createSessionSimulation({
+          scenarioCode: row.productCode,
+          inputFilePath:
+            row.inputFile instanceof File
+              ? row.inputFile.name
+              : row.inputFilePath,
+          sessionId
+        });}
       /** 🔹 END minimal addition */
 
       const scenarioValidation = await ApiService.validateScenarioCode(

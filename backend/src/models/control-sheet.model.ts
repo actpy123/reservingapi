@@ -16,6 +16,7 @@ const controlSheetSchema = new Schema(
     progress: { type: Schema.Types.Mixed },
     execTime: { type: Number }, // seconds or ms
     success: { type: Boolean },
+    data: { type: [Schema.Types.Mixed] },
   },
   { timestamps: true }
 );
