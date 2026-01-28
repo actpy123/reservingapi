@@ -17,9 +17,17 @@ const ReserveCalculatePage: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
-  const [sessionName, setDefaultSessionName] = useState<string>(
-    new Date().toISOString().slice(0, 19).replace("T", " "),
-  );
+ const [defaultSessionName, setDefaultSessionName] = useState<string>(
+  new Date().toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+);
+
   // const [sessionName, setSessionName] = useState<string | null>(null);
 
   const backendStatus = useBackendStatus();
@@ -59,8 +67,6 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
-      console.log("session name from parent", sessionName);
-
       /** 🔹 OPTIMIZED: create session if missing */
 
       let sessionId = new URLSearchParams(window.location.search).get(
@@ -75,7 +81,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       if (!sessionId) {
         setIsSessionFormOpen(true);
-        payload.sessionName = sessionName;
+        payload.sessionName = defaultSessionName;
       } else {
         payload.sessionId = sessionId;
       }
@@ -264,17 +270,17 @@ const ReserveCalculatePage: React.FC = () => {
       setControlSheets(
         res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: String(index + 1), // or backend runNo if exists
-          productCode: item.scenarioCode, // mapping
-          runIndicator: "Yes", // default (or backend later)
+          runNo: String(index + 1), 
+          productCode: item.scenarioCode, 
+          runIndicator: "Yes", 
           inputFilePath: item.inputFilePath,
-          inputFile: null, // backend file already stored
-          outputFilePath: item.outPutUrl, // not available yet
+          inputFile: null,
+          outputFilePath: item.outPutUrl,
           execution: item.execution ?? "Pending",
           progress:
             item.execution === "Completed"
               ? 100
-              : item.execution === "running"
+              : item.execution === "Running"
                 ? 50
                 : 0,
           execSeconds: null,
@@ -307,7 +313,7 @@ const ReserveCalculatePage: React.FC = () => {
         <SessionHistory
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
-          currentSessionName={sessionName}
+          currentSessionName={defaultSessionName}
         />
       </div>
       <div style={{ padding: "16px" }}>
@@ -489,7 +495,7 @@ const ReserveCalculatePage: React.FC = () => {
                         <SaveSessionModal
                           open={isSessionFormOpen}
                           onClose={() => setIsSessionFormOpen(false)}
-                          sessionName={sessionName}
+                          sessionName={defaultSessionName}
                           setSessionName={setDefaultSessionName}
                           onSave={() => {
                             runReserve(row); // ✅ runs ONLY once
