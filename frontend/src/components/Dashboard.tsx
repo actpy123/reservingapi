@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import SaveSessionModal from "./SaveSessionModal";
 
 const Dashboard: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);

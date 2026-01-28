@@ -7,10 +7,15 @@ import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
+=======
+import SaveSessionModal from "../components/SaveSessionModal";
+>>>>>>> 53a849ce06e33bb9836f747f400ac96b6c20506f
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSessionFormOpen, setIsSessionFormOpen] = useState(true);
   const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
@@ -283,10 +288,20 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
+<<<<<<< HEAD
         <SessionHistory
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
         />
+=======
+        <SaveSessionModal
+          open={isSessionFormOpen}
+          onClose={() => {
+            setIsSessionFormOpen(false);
+          }}
+        />
+        <SessionHistory />
+>>>>>>> 53a849ce06e33bb9836f747f400ac96b6c20506f
       </div>
       <div style={{ padding: "16px" }}>
         <div className="flex items-center justify-between mb-6">
