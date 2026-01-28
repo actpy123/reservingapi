@@ -168,7 +168,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 export async function createSessionSimulation(req: AuthenticatedRequest, res: Response) {
   const user: any = req.user;
   console.log(req.body);
-  const { scenarioCode, inputFilePath, sessionId } = req.body;
+  const { scenarioCode, inputFilePath, sessionId, sessionName } = req.body;
 
   try {
     let session;
@@ -186,6 +186,7 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
     } else {
       session = await SessionSimulation.create({
         userId: user._id,
+        name: sessionName
       });
     }
     const controlSheet = await ControlSheet.create({

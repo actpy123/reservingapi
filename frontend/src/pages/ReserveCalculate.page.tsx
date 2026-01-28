@@ -7,19 +7,20 @@ import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
-<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
-=======
 import SaveSessionModal from "../components/SaveSessionModal";
->>>>>>> 53a849ce06e33bb9836f747f400ac96b6c20506f
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSessionFormOpen, setIsSessionFormOpen] = useState(true);
+  const [isSessionFormOpen, setIsSessionFormOpen] = useState(false);
   const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
+ const [sessionName, setDefaultSessionName] = useState<string>(
+    new Date().toISOString().slice(0, 19).replace("T", " "),
+  );
+  // const [sessionName, setSessionName] = useState<string | null>(null);
 
   const backendStatus = useBackendStatus();
   const navigate = useNavigate();
@@ -50,7 +51,6 @@ const ReserveCalculatePage: React.FC = () => {
   };
 
   const runReserve = async (row: ControlSheet) => {
-    console.log('control sheet data', row);
     try {
       if (backendStatus === "offline") {
         alert(
@@ -59,15 +59,21 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
+      console.log('session name from parent', sessionName);
+
       /** 🔹 MINIMAL ADDITION: create session if missing */
-      let sessionId = new URLSearchParams(window.location.search).get("session");
+      let sessionId = new URLSearchParams(window.location.search).get(
+        "session",
+      );
       if (!sessionId) {
+        setIsSessionFormOpen(true);
         const res = await ApiService.createSessionSimulation({
           scenarioCode: row.productCode,
           inputFilePath:
             row.inputFile instanceof File
               ? row.inputFile.name
               : row.inputFilePath,
+          sessionName,
         });
 
         sessionId = res.data.session._id;
@@ -79,16 +85,18 @@ const ReserveCalculatePage: React.FC = () => {
         navigate(`${window.location.pathname}?session=${sessionId}`, {
           replace: true,
         });
-      }
-      else
-      { const res = await ApiService.createSessionSimulation({
+      } else {
+        const res = await ApiService.createSessionSimulation({
           scenarioCode: row.productCode,
           inputFilePath:
             row.inputFile instanceof File
               ? row.inputFile.name
               : row.inputFilePath,
-          sessionId
-        });}
+          sessionId,
+        });
+      }
+
+      setSelectedSessionId(sessionId);
       /** 🔹 END minimal addition */
 
       const scenarioValidation = await ApiService.validateScenarioCode(
@@ -288,20 +296,11 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
-<<<<<<< HEAD
         <SessionHistory
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
+          currentSessionName={sessionName}
         />
-=======
-        <SaveSessionModal
-          open={isSessionFormOpen}
-          onClose={() => {
-            setIsSessionFormOpen(false);
-          }}
-        />
-        <SessionHistory />
->>>>>>> 53a849ce06e33bb9836f747f400ac96b6c20506f
       </div>
       <div style={{ padding: "16px" }}>
         <div className="flex items-center justify-between mb-6">
@@ -469,11 +468,30 @@ const ReserveCalculatePage: React.FC = () => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => runReserve(row)}
+                        onClick={() =>
+                          selectedSessionId
+                            ? runReserve(row)
+                            : setIsSessionFormOpen(true)
+                        }
                         className="text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full border border-orange-500 shadow-sm"
                       >
                         Run
                       </button>
+                      {isSessionFormOpen && (
+                        <SaveSessionModal
+                          open={isSessionFormOpen}
+                          onClose={() => setIsSessionFormOpen(false)}
+                          sessionName={sessionName}
+                          setSessionName={setDefaultSessionName}
+                          onSave={() => {
+                            runReserve(row) // ✅ runs ONLY once
+                            // handleSessionSelect(selectedSessionId!)
+                            // setPendingRow(null);
+                            setIsSessionFormOpen(false);
+                          }}
+                        />
+                      )}
+
                       {ApiService.isValidUrl(row.outputUrl) && (
                         <button
                           type="button"
