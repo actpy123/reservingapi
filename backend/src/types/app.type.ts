@@ -1,6 +1,7 @@
 export type Scenario = {
   scenarioCode: string;
   data: { [key: string]: any }[];
+  controlSheetId:string;
 };
 
 export interface PolicySummary {

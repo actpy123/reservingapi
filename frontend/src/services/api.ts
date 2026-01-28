@@ -25,7 +25,8 @@ export interface ReserveCalculationResult {
 
 export interface Scenario {
   scenarioCode: string;
-  data: { [key: string]: any }[];
+  data: { [key: string]: any }[] | null;
+  controlSheetId: string | null
 }
 
 export class ApiService {

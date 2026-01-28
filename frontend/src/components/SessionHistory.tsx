@@ -11,12 +11,16 @@ type Session = {
 type SessionHistoryProps = {
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
+  currentSessionName?: string | null;
 };
 
 function SessionHistory({
   onSessionSelect,
   onNewSession,
+  currentSessionName
 }: SessionHistoryProps) {
+
+  // console.log()
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
     LOADING_STATUS.IDLE,
@@ -26,7 +30,7 @@ function SessionHistory({
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
- 
+
   useEffect(() => {
     if (sessionsApiStatus === LOADING_STATUS.IDLE) {
       setSessionsApiStatus(LOADING_STATUS.LOADING);
@@ -38,8 +42,10 @@ function SessionHistory({
 
           const params = new URLSearchParams(window.location.search);
           const sessionIdFromUrl = params.get("session");
-          console.log('session from url',sessionIdFromUrl);
-          if (sessionIdFromUrl && sessionList.find((session)=>session.id===sessionIdFromUrl)) {
+          if (
+            sessionIdFromUrl &&
+            sessionList.find((session) => session.id === sessionIdFromUrl)
+          ) {
             setSelectedSessionId(sessionIdFromUrl);
             onSessionSelect(sessionIdFromUrl);
             // setHasAutoSelected(true);
@@ -57,7 +63,6 @@ function SessionHistory({
 
     return sessions.map((session) => {
       const isSelected = selectedSessionId === session.id;
-      console.log('selected session',selectedSessionId);
       return (
         <div
           key={session.id}
@@ -105,11 +110,13 @@ function SessionHistory({
             <div
               className={`item ${selectedSessionId === null ? "selected" : ""}`}
               onClick={() => {
-                setSelectedSessionId(null); // go back to unsaved
+                setSelectedSessionId(null);
                 onNewSession();
               }}
             >
-              <span className="title">unsaved session</span>
+              <span className="title">
+                {currentSessionName ?? "unsaved session"}
+              </span>
               <button>
                 <span className="material-symbols-outlined">more_vert</span>
               </button>

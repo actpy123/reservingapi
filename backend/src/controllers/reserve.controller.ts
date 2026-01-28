@@ -87,6 +87,21 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 
     const scenarios: Scenario[] = req.body;
     const assumptionId: any = assumptions[0].assumptionId;
+    const controlSheetId: any = scenarios[0].controlSheetId;
+    const scenarioData = scenarios?.[0]?.data;
+
+    const controlSheet = scenarioData
+      ? await ControlSheet.findByIdAndUpdate(controlSheetId, { $set: { data: scenarioData } }, { new: true })
+      : await ControlSheet.findById(controlSheetId, { data: 1 }).lean();
+
+    const fileData = scenarioData ?? controlSheet?.data ?? null;
+    console.log('fileData', fileData);
+
+    if (!fileData || !fileData.length) {
+      res.sendCustomResponse(400, { message: 'unable to retrive file data' });
+      return;
+    }
+
     // const policySummaries = createPolicySummaryArray(1201);
     let skippedPolicies = 0;
     let successfulPolicies = 0;
@@ -105,7 +120,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     const incomeSurvivalBenefitRates = loadRates(assumptions, product['Income_Survival Benefit Table']);
     product['MAD FLAG'] = toNumber(product['MAD FLAG']);
 
-    const promises = scenarios[0].data.map((policyData: any) =>
+    const promises = fileData.map((policyData: any) =>
       piscina.run({
         policyData,
         product,
@@ -149,12 +164,20 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     reserveResultId = reserveResult._id;
     await reserveResult.save();
 
+    const outputFile = `${process.env.VITE_API_BASE_URL}/download/output/${reserveResultId}`;
+    const cashflows = `${process.env.VITE_API_BASE_URL}/download/cashflow/${reserveResultId}`;
+
+    const updateControlSheet = await ControlSheet.findByIdAndUpdate(
+      controlSheetId,
+      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed' } },
+      { new: true },
+    );
     res.sendCustomResponse(200, {
       data: {
         skippedPolicies,
         successfulPolicies,
-        outputFile: `${process.env.VITE_API_BASE_URL}/download/output/${reserveResultId}`,
-        cashflows: `${process.env.VITE_API_BASE_URL}/download/cashflow/${reserveResultId}`,
+        outputFile: outputFile,
+        cashflows: cashflows,
       },
     });
   } catch (error: any) {
@@ -186,7 +209,7 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
     } else {
       session = await SessionSimulation.create({
         userId: user._id,
-        name: sessionName
+        name: sessionName,
       });
     }
     const controlSheet = await ControlSheet.create({
@@ -224,7 +247,7 @@ export async function controlSheet(req: AuthenticatedRequest, res: Response) {
     const controlSheets = await ControlSheet.find({
       sessionId,
     });
-    res.sendCustomResponse(200, { data: controlSheets  });
+    res.sendCustomResponse(200, { data: controlSheets });
     return;
   } catch (error) {
     console.error('sessionsimulation error:', error);
@@ -273,7 +296,7 @@ export async function getAllUserControlSheets(req: AuthenticatedRequest, res: Re
 export async function getAllSessionName(req: AuthenticatedRequest, res: Response) {
   const user: any = req.user;
   try {
-    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1, name: 1 }).sort({createdAt:-1});
+    const sessions = await SessionSimulation.find({ userId: user._id }, { _id: 1, name: 1 }).sort({ createdAt: -1 });
     const data = sessions.map((session) => ({ id: session._id, name: session.name }));
     res.sendCustomResponse(200, { data: data });
   } catch (error) {

@@ -17,7 +17,7 @@ const ReserveCalculatePage: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
- const [sessionName, setDefaultSessionName] = useState<string>(
+  const [sessionName, setDefaultSessionName] = useState<string>(
     new Date().toISOString().slice(0, 19).replace("T", " "),
   );
   // const [sessionName, setSessionName] = useState<string | null>(null);
@@ -59,45 +59,48 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
-      console.log('session name from parent', sessionName);
+      console.log("session name from parent", sessionName);
 
-      /** 🔹 MINIMAL ADDITION: create session if missing */
+      /** 🔹 OPTIMIZED: create session if missing */
+
       let sessionId = new URLSearchParams(window.location.search).get(
         "session",
       );
+      let controlSheetId: any = row.controlSheetId;
+
+      // shared payload
+      const payload: any = {
+        scenarioCode: row.productCode,
+      };
+
       if (!sessionId) {
         setIsSessionFormOpen(true);
-        const res = await ApiService.createSessionSimulation({
-          scenarioCode: row.productCode,
-          inputFilePath:
-            row.inputFile instanceof File
-              ? row.inputFile.name
-              : row.inputFilePath,
-          sessionName,
-        });
+        payload.sessionName = sessionName;
+      } else {
+        payload.sessionId = sessionId;
+      }
 
-        sessionId = res.data.session._id;
+      if (!row.controlSheetId) {
+        const res = await ApiService.createSessionSimulation(payload);
+        sessionId = sessionId ?? res.data.session._id;
+        controlSheetId = res.data.controlSheet._id;
+        row.controlSheetId=controlSheetId;
+      } else {
+        // sessionId = row.sessionId;
+        controlSheetId = row.controlSheetId;
+      }
 
-        setControlSheets((prev) =>
-          prev.map((r) => (r.id === row.id ? { ...r } : r)),
-        );
+      // console.log()
 
+      if (!new URLSearchParams(window.location.search).get("session")) {
         navigate(`${window.location.pathname}?session=${sessionId}`, {
           replace: true,
-        });
-      } else {
-        const res = await ApiService.createSessionSimulation({
-          scenarioCode: row.productCode,
-          inputFilePath:
-            row.inputFile instanceof File
-              ? row.inputFile.name
-              : row.inputFilePath,
-          sessionId,
         });
       }
 
       setSelectedSessionId(sessionId);
-      /** 🔹 END minimal addition */
+
+      /** 🔹 END optimized */
 
       const scenarioValidation = await ApiService.validateScenarioCode(
         String(row.productCode || "").trim(),
@@ -127,38 +130,42 @@ const ReserveCalculatePage: React.FC = () => {
       );
 
       let csvText = "";
+      let policies: any[] | null = null;
+
+      // 🔹 Read CSV only if source exists
       if (row.inputFile instanceof File) {
         csvText = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
           reader.onerror = () => reject(reader.error);
-          reader.readAsText(row.inputFile as File);
+          reader.readAsText(row.inputFile!);
         });
       } else if (row.inputFilePath) {
         const resp = await fetch(row.inputFilePath);
-        if (!resp.ok) {
-          throw new Error(
-            `Failed to fetch input file: ${resp.status} ${resp.statusText}`,
-          );
+        if (resp.ok) {
+          csvText = await resp.text();
         }
-        csvText = await resp.text();
-      } else {
-        throw new Error("No input file or URL provided");
       }
 
-      const policies = parseCsvToObjects(csvText);
-      if (policies.length === 0) {
-        throw new Error("No policies found in input CSV");
+      // 🔹 Parse only if csvText has content
+      if (csvText.trim().length > 0) {
+        const parsed = parseCsvToObjects(csvText);
+        policies = parsed.length > 0 ? parsed : null;
       }
 
-      setControlSheets((prev) =>
-        prev.map((r) => (r.id === row.id ? { ...r, progress: 40 } : r)),
-      );
+      // 🔹 Update progress only when data exists
+      if (policies) {
+        setControlSheets((prev) =>
+          prev.map((r) => (r.id === row.id ? { ...r, progress: 40 } : r)),
+        );
+      }
 
+      // 🔹 Build scenarios
       const scenarios: Scenario[] = [
         {
           scenarioCode: row.productCode,
-          data: policies,
+          data: policies, // ✅ null when no inputFilePath / no data
+          controlSheetId,
         },
       ];
 
@@ -262,19 +269,20 @@ const ReserveCalculatePage: React.FC = () => {
           runIndicator: "Yes", // default (or backend later)
           inputFilePath: item.inputFilePath,
           inputFile: null, // backend file already stored
-          outputFilePath: "", // not available yet
+          outputFilePath: item.outPutUrl, // not available yet
           execution: item.execution ?? "Pending",
           progress:
-            item.execution === "completed"
+            item.execution === "Completed"
               ? 100
               : item.execution === "running"
                 ? 50
                 : 0,
-          execSeconds: undefined,
-          successfulPolicies: undefined,
-          skippedPolicies: undefined,
-          outputUrl: undefined,
-          cashflowUrl: undefined,
+          execSeconds: null,
+          successfulPolicies: item.success,
+          skippedPolicies: null,
+          outputUrl: item.outPutUrl,
+          cashflowUrl: item.cashFlowUrl,
+          controlSheetId:item._id,
         })),
       );
     } catch (err) {
@@ -484,7 +492,7 @@ const ReserveCalculatePage: React.FC = () => {
                           sessionName={sessionName}
                           setSessionName={setDefaultSessionName}
                           onSave={() => {
-                            runReserve(row) // ✅ runs ONLY once
+                            runReserve(row); // ✅ runs ONLY once
                             // handleSessionSelect(selectedSessionId!)
                             // setPendingRow(null);
                             setIsSessionFormOpen(false);
