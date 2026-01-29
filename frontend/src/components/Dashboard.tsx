@@ -1,17 +1,24 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import SaveSessionModal from "./SaveSessionModal";
 
 const Dashboard: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
+   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
       <div className="flex min-h-screen">
         <aside
-          className={`${isSidebarCollapsed ? "w-14" : "w-64"} bg-blue-900 text-white transition-all duration-200 flex-shrink-0 overflow-x-hidden`}
+          className={`${isSidebarCollapsed ? "w-14" : "w-64"} bg-blue-900 text-white transition-all duration-200 flex-shrink-0 overflow-hidden flex flex-col h-screen sticky top-0`}
         >
           <div className="p-4 flex items-center justify-between">
             {!isSidebarCollapsed && (
@@ -47,7 +54,7 @@ const Dashboard: React.FC = () => {
               </svg>
             </button>
           </div>
-          <nav className="px-2 space-y-2">
+          <nav className="px-2 space-y-2 flex-1">
             {!isSidebarCollapsed ? (
               <>
                 <NavLink
@@ -120,6 +127,55 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </nav>
+          <div className="p-4 mt-auto border-t border-white/10 backdrop-blur-sm">
+            {!isSidebarCollapsed ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg px-4 py-3 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-105 font-medium"
+                title="Logout"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Logout</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 mx-auto shadow-lg hover:shadow-xl hover:scale-110"
+                title="Logout"
+                aria-label="Logout"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         </aside>
 
         <main className="flex-1 p-8 min-w-0">
