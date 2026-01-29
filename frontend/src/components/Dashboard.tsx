@@ -127,12 +127,12 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </nav>
-          <div className="p-4 mt-auto border-t border-white/10 backdrop-blur-sm">
+          <div className="p-4 mt-auto border-t border-white/20">
             {!isSidebarCollapsed ? (
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg px-4 py-3 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-105 font-medium"
+                className="w-full bg-red-600 text-white rounded-full px-4 py-3 flex items-center justify-center gap-2"
                 title="Logout"
               >
                 <svg
@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                 >
                   <path
                     strokeLinecap="round"
@@ -155,7 +155,7 @@ const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 mx-auto shadow-lg hover:shadow-xl hover:scale-110"
+                className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto"
                 title="Logout"
                 aria-label="Logout"
               >
@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                 >
                   <path
                     strokeLinecap="round"
