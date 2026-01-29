@@ -28,7 +28,6 @@ const ReserveCalculatePage: React.FC = () => {
   })
 );
 
-  // const [sessionName, setSessionName] = useState<string | null>(null);
 
   const backendStatus = useBackendStatus();
   const navigate = useNavigate();
@@ -67,14 +66,12 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
-      /** 🔹 OPTIMIZED: create session if missing */
 
       let sessionId = new URLSearchParams(window.location.search).get(
         "session",
       );
       let controlSheetId: any = row.controlSheetId;
 
-      // shared payload
       const payload: any = {
         scenarioCode: row.productCode,
       };
@@ -92,11 +89,8 @@ const ReserveCalculatePage: React.FC = () => {
         controlSheetId = res.data.controlSheet._id;
         row.controlSheetId=controlSheetId;
       } else {
-        // sessionId = row.sessionId;
         controlSheetId = row.controlSheetId;
       }
-
-      // console.log()
 
       if (!new URLSearchParams(window.location.search).get("session")) {
         navigate(`${window.location.pathname}?session=${sessionId}`, {
@@ -105,8 +99,6 @@ const ReserveCalculatePage: React.FC = () => {
       }
 
       setSelectedSessionId(sessionId);
-
-      /** 🔹 END optimized */
 
       const scenarioValidation = await ApiService.validateScenarioCode(
         String(row.productCode || "").trim(),
@@ -170,7 +162,7 @@ const ReserveCalculatePage: React.FC = () => {
       const scenarios: Scenario[] = [
         {
           scenarioCode: row.productCode,
-          data: policies, // ✅ null when no inputFilePath / no data
+          data: policies, 
           controlSheetId,
         },
       ];
