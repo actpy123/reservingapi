@@ -3,11 +3,13 @@ import { ApiService } from "../services/api";
 import { useFileHandler } from "../hooks";
 
 interface ControlSheetFormProps {
+  sessionId?: string; 
   onSubmit: (data: any) => void;
   onClose: () => void;
 }
 
 const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
+  sessionId,
   onSubmit,
   onClose,
 }) => {
@@ -30,14 +32,14 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
         setLoadingCodes(true);
         const assumptions = await ApiService.getAssumptions();
         const productMaster = assumptions.find(
-          (a: any) => a.name === "product_master"
+          (a: any) => a.name === "product_master",
         );
         const codes: string[] = Array.from(
           new Set(
             (productMaster?.data || [])
               .map((p: any) => String(p["Scenario Code"]).trim())
-              .filter(Boolean)
-          )
+              .filter(Boolean),
+          ),
         );
         setScenarioCodes(codes);
       } catch {
@@ -57,10 +59,25 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    console.log('sessionId',sessionId);
+    // const res = await ApiService.createSessionSimulation({
+    //   ...formData,
+    //   sessionId, 
+    //   inputFilePath: `${inputFileHandler.selectedFile?.name}`,
+    //   scenarioCode: formData.productCode,
+    // });
+
+
+  // 👇 extract sessionId (backend creates it if missing)
+  // const createdSessionId = res.data.session._id;
+
     await onSubmit({
       ...formData,
       inputFile: inputFileHandler.selectedFile,
+      // sessionId:createdSessionId
     });
+
     setIsSubmitting(false);
   };
 

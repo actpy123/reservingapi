@@ -7,13 +7,30 @@ import { useBackendStatus } from "../hooks";
 import type { ControlSheet } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
+import { useNavigate } from "react-router-dom";
 import SaveSessionModal from "../components/SaveSessionModal";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSessionFormOpen, setIsSessionFormOpen] = useState(true);
+  const [isSessionFormOpen, setIsSessionFormOpen] = useState(false);
   const [controlSheets, setControlSheets] = useState<ControlSheet[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
+ const [defaultSessionName, setDefaultSessionName] = useState<string>(
+  new Date().toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+);
+
+
   const backendStatus = useBackendStatus();
+  const navigate = useNavigate();
 
   const handleControlSheet = () => setIsFormOpen(true);
   const handleFormClose = () => setIsFormOpen(false);
@@ -49,6 +66,40 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
+
+      let sessionId = new URLSearchParams(window.location.search).get(
+        "session",
+      );
+      let controlSheetId: any = row.controlSheetId;
+
+      const payload: any = {
+        scenarioCode: row.productCode,
+      };
+
+      if (!sessionId) {
+        setIsSessionFormOpen(true);
+        payload.sessionName = defaultSessionName;
+      } else {
+        payload.sessionId = sessionId;
+      }
+
+      if (!row.controlSheetId) {
+        const res = await ApiService.createSessionSimulation(payload);
+        sessionId = sessionId ?? res.data.session._id;
+        controlSheetId = res.data.controlSheet._id;
+        row.controlSheetId=controlSheetId;
+      } else {
+        controlSheetId = row.controlSheetId;
+      }
+
+      if (!new URLSearchParams(window.location.search).get("session")) {
+        navigate(`${window.location.pathname}?session=${sessionId}`, {
+          replace: true,
+        });
+      }
+
+      setSelectedSessionId(sessionId);
+
       const scenarioValidation = await ApiService.validateScenarioCode(
         String(row.productCode || "").trim(),
       );
@@ -77,38 +128,42 @@ const ReserveCalculatePage: React.FC = () => {
       );
 
       let csvText = "";
+      let policies: any[] | null = null;
+
+      // 🔹 Read CSV only if source exists
       if (row.inputFile instanceof File) {
         csvText = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
           reader.onerror = () => reject(reader.error);
-          reader.readAsText(row.inputFile as File);
+          reader.readAsText(row.inputFile!);
         });
       } else if (row.inputFilePath) {
         const resp = await fetch(row.inputFilePath);
-        if (!resp.ok) {
-          throw new Error(
-            `Failed to fetch input file: ${resp.status} ${resp.statusText}`,
-          );
+        if (resp.ok) {
+          csvText = await resp.text();
         }
-        csvText = await resp.text();
-      } else {
-        throw new Error("No input file or URL provided");
       }
 
-      const policies = parseCsvToObjects(csvText);
-      if (policies.length === 0) {
-        throw new Error("No policies found in input CSV");
+      // 🔹 Parse only if csvText has content
+      if (csvText.trim().length > 0) {
+        const parsed = parseCsvToObjects(csvText);
+        policies = parsed.length > 0 ? parsed : null;
       }
 
-      setControlSheets((prev) =>
-        prev.map((r) => (r.id === row.id ? { ...r, progress: 40 } : r)),
-      );
+      // 🔹 Update progress only when data exists
+      if (policies) {
+        setControlSheets((prev) =>
+          prev.map((r) => (r.id === row.id ? { ...r, progress: 40 } : r)),
+        );
+      }
 
+      // 🔹 Build scenarios
       const scenarios: Scenario[] = [
         {
           scenarioCode: row.productCode,
-          data: policies,
+          data: policies, 
+          controlSheetId,
         },
       ];
 
@@ -197,6 +252,49 @@ const ReserveCalculatePage: React.FC = () => {
     URL.revokeObjectURL(objectUrl);
   };
 
+  const handleSessionSelect = async (sessionId: string) => {
+    try {
+      setSelectedSessionId(sessionId);
+      navigate(`${window.location.pathname}?session=${sessionId}`, {
+        replace: true,
+      });
+      const res = await ApiService.getControlSheets(sessionId);
+      setControlSheets(
+        res.data.map((item: any, index: number) => ({
+          id: item._id, // required
+          runNo: String(index + 1), 
+          productCode: item.scenarioCode, 
+          runIndicator: "Yes", 
+          inputFilePath: item.inputFilePath,
+          inputFile: null,
+          outputFilePath: item.outPutUrl,
+          execution: item.execution ?? "Pending",
+          progress:
+            item.execution === "Completed"
+              ? 100
+              : item.execution === "Running"
+                ? 50
+                : 0,
+          execSeconds: null,
+          successfulPolicies: item.success,
+          skippedPolicies: null,
+          outputUrl: item.outPutUrl,
+          cashflowUrl: item.cashFlowUrl,
+          controlSheetId:item._id,
+        })),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load control sheets for this session");
+    }
+  };
+
+  const handleNewSession = () => {
+    setSelectedSessionId(null);
+    setControlSheets([]);
+    navigate(window.location.pathname, { replace: true });
+  };
+
   return (
     <div
       style={{
@@ -204,13 +302,11 @@ const ReserveCalculatePage: React.FC = () => {
       }}
     >
       <div>
-        <SaveSessionModal
-          open={isSessionFormOpen}
-          onClose={() => {
-            setIsSessionFormOpen(false);
-          }}
+        <SessionHistory
+          onSessionSelect={handleSessionSelect}
+          onNewSession={handleNewSession}
+          currentSessionName={defaultSessionName}
         />
-        <SessionHistory />
       </div>
       <div style={{ padding: "16px" }}>
         <div className="flex items-center justify-between mb-6">
@@ -378,11 +474,30 @@ const ReserveCalculatePage: React.FC = () => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => runReserve(row)}
+                        onClick={() =>
+                          selectedSessionId
+                            ? runReserve(row)
+                            : setIsSessionFormOpen(true)
+                        }
                         className="text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full border border-orange-500 shadow-sm"
                       >
                         Run
                       </button>
+                      {isSessionFormOpen && (
+                        <SaveSessionModal
+                          open={isSessionFormOpen}
+                          onClose={() => setIsSessionFormOpen(false)}
+                          sessionName={defaultSessionName}
+                          setSessionName={setDefaultSessionName}
+                          onSave={() => {
+                            runReserve(row); // ✅ runs ONLY once
+                            // handleSessionSelect(selectedSessionId!)
+                            // setPendingRow(null);
+                            setIsSessionFormOpen(false);
+                          }}
+                        />
+                      )}
+
                       {ApiService.isValidUrl(row.outputUrl) && (
                         <button
                           type="button"
@@ -416,6 +531,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       {isFormOpen && (
         <ControlSheetForm
+          {...(selectedSessionId ? { sessionId: selectedSessionId } : {})}
           onSubmit={handleFormSubmit}
           onClose={handleFormClose}
         />

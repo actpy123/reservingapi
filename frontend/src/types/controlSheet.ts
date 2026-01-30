@@ -1,10 +1,10 @@
 export interface ControlSheet {
-  id: string;
+  id: any;
   runNo: string;
   productCode: string;
   runIndicator: string;
   inputFilePath: string;
-  inputFile?: File | null;
+  inputFile: File | null;
   outputFilePath: string;
   execution: string;
   progress: number;
@@ -13,6 +13,8 @@ export interface ControlSheet {
   execSeconds?: number;
   successfulPolicies?: number;
   skippedPolicies?: number;
+  sessionId:string;
+  controlSheetId:string
 }
 
 export enum LOADING_STATUS {
