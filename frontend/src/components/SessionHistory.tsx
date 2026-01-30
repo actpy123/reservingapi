@@ -17,16 +17,15 @@ type SessionHistoryProps = {
 function SessionHistory({
   onSessionSelect,
   onNewSession,
-  currentSessionName
+  currentSessionName,
 }: SessionHistoryProps) {
-
   // console.log()
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
     LOADING_STATUS.IDLE,
   );
   const [showUnsavedSession, setShowUnsavedSession] = useState(true);
-  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [hasAutoSelected] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );

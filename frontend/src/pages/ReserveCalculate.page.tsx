@@ -17,17 +17,8 @@ const ReserveCalculatePage: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
- const [defaultSessionName, setDefaultSessionName] = useState<string>(
-  new Date().toLocaleString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  })
-);
-
+  const [defaultSessionName, setDefaultSessionName] =
+    useState<string>("unsaved session");
 
   const backendStatus = useBackendStatus();
   const navigate = useNavigate();
@@ -66,7 +57,6 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
-
       let sessionId = new URLSearchParams(window.location.search).get(
         "session",
       );
@@ -87,7 +77,7 @@ const ReserveCalculatePage: React.FC = () => {
         const res = await ApiService.createSessionSimulation(payload);
         sessionId = sessionId ?? res.data.session._id;
         controlSheetId = res.data.controlSheet._id;
-        row.controlSheetId=controlSheetId;
+        row.controlSheetId = controlSheetId;
       } else {
         controlSheetId = row.controlSheetId;
       }
@@ -162,7 +152,7 @@ const ReserveCalculatePage: React.FC = () => {
       const scenarios: Scenario[] = [
         {
           scenarioCode: row.productCode,
-          data: policies, 
+          data: policies,
           controlSheetId,
         },
       ];
@@ -262,9 +252,9 @@ const ReserveCalculatePage: React.FC = () => {
       setControlSheets(
         res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: String(index + 1), 
-          productCode: item.scenarioCode, 
-          runIndicator: "Yes", 
+          runNo: String(index + 1),
+          productCode: item.scenarioCode,
+          runIndicator: "Yes",
           inputFilePath: item.inputFilePath,
           inputFile: null,
           outputFilePath: item.outPutUrl,
@@ -280,7 +270,7 @@ const ReserveCalculatePage: React.FC = () => {
           skippedPolicies: null,
           outputUrl: item.outPutUrl,
           cashflowUrl: item.cashFlowUrl,
-          controlSheetId:item._id,
+          controlSheetId: item._id,
         })),
       );
     } catch (err) {

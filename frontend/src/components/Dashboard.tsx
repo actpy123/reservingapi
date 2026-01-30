@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import SaveSessionModal from "./SaveSessionModal";
 
 const Dashboard: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("token");

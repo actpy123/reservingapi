@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../styles/save-session.css";
 
 type ModalProps = {
@@ -9,8 +9,15 @@ type ModalProps = {
   onSave: () => void;
 };
 
-function SaveSessionModal({ open, onClose,sessionName, setSessionName, onSave }: ModalProps) {
+function SaveSessionModal({
+  open,
+  onClose,
+  sessionName,
+  setSessionName,
+  onSave,
+}: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [sessionNameLocal, setSessionNameLocal] = useState(sessionName);
 
   // ✅ Open/Close controlled by props
   useEffect(() => {
@@ -31,29 +38,38 @@ function SaveSessionModal({ open, onClose,sessionName, setSessionName, onSave }:
     <dialog
       ref={dialogRef}
       className="modal"
-      onClick={(e) => {
-        if (e.target === dialogRef.current) {
-          onClose();
-        }
+      onClose={() => {
+        setSessionNameLocal(sessionName);
+        onClose();
       }}
-      onClose={onClose}
     >
       <div className="p-4 flex gap-4 flex-col">
         <h2 className="text-xm font-semibold">
           You need to save your session before running your control sheet
         </h2>
-        <div>
-          <label className="text-sm font-medium text-gray-700">
-            Session Name
-          </label>
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            placeholder="Enter session name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-          <span className="text-xs text-gray-500">
+        <div className="flex gap-2 flex-col">
+          <div className="flex gap-2 flex-col">
+            <label
+              className="text-sm font-medium text-gray-700"
+              style={{ textAlign: "left" }}
+            >
+              Session Name
+            </label>
+            <input
+              type="text"
+              value={sessionNameLocal}
+              onClick={() => {
+                if (sessionNameLocal === "unsaved session") {
+                  setSessionNameLocal("");
+                }
+              }}
+              onChange={(e) => setSessionNameLocal(e.target.value)}
+              placeholder="Enter session name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
+
+          <span className="text-xs text-gray-500" style={{ textAlign: "left" }}>
             You can modify session name
           </span>
         </div>

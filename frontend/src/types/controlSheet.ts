@@ -13,8 +13,8 @@ export interface ControlSheet {
   execSeconds?: number;
   successfulPolicies?: number;
   skippedPolicies?: number;
-  sessionId:string;
-  controlSheetId:string
+  sessionId?: string;
+  controlSheetId?: string;
 }
 
 export enum LOADING_STATUS {

@@ -26,12 +26,10 @@ export interface ReserveCalculationResult {
 export interface Scenario {
   scenarioCode: string;
   data: { [key: string]: any }[] | null;
-  controlSheetId: string | null
+  controlSheetId: string | null;
 }
 
 export class ApiService {
-  private static token: string | null = localStorage.getItem("authToken");
-
   static async login(email: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/user/login`, {
       method: "POST",
@@ -50,7 +48,6 @@ export class ApiService {
 
     const data = await response.json();
 
-    ApiService.token = data.token; // ✅ store in class
     localStorage.setItem("authToken", data.token); // optional persistence
     return data;
   }
@@ -331,7 +328,7 @@ export class ApiService {
     return `${API_BASE_URL}/reserve/download/cashflow/${id}`;
   }
 
-  static async getControlSheets(id:string) {
+  static async getControlSheets(id: string) {
     const res = await apiFetch(`${API_BASE_URL}/reserve/control/${id}`);
 
     if (!res.ok) {
