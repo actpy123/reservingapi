@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "../styles/save-session.css";
 
 type ModalProps = {
@@ -6,16 +6,10 @@ type ModalProps = {
   onClose: () => void;
   sessionName: string;
   setSessionName: (value: string) => void;
-  onSave: () => void;
+  onSave: (sessionName: string) => void;
 };
 
-function SaveSessionModal({
-  open,
-  onClose,
-  sessionName,
-  setSessionName,
-  onSave,
-}: ModalProps) {
+function SaveSessionModal({ open, onClose, sessionName, onSave }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [sessionNameLocal, setSessionNameLocal] = useState(sessionName);
 
@@ -33,6 +27,10 @@ function SaveSessionModal({
       dialog.close();
     }
   }, [open]);
+
+  const onSaveCallback = useCallback(() => {
+    onSave(sessionNameLocal);
+  }, [onSave, sessionNameLocal]);
 
   return (
     <dialog
@@ -75,8 +73,9 @@ function SaveSessionModal({
         </div>
         <div className="flex gap-4 pt-4 justify-end">
           <button
-            className="bg-orange-500 text-white px-4 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
-            onClick={onSave}
+            className="bg-orange-500 disabled:bg-gray-300 text-white px-4 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            onClick={onSaveCallback}
+            disabled={!sessionNameLocal.length}
           >
             Save Session
           </button>

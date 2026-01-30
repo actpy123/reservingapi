@@ -479,10 +479,11 @@ const ReserveCalculatePage: React.FC = () => {
                           onClose={() => setIsSessionFormOpen(false)}
                           sessionName={defaultSessionName}
                           setSessionName={setDefaultSessionName}
-                          onSave={() => {
+                          onSave={(sessionName) => {
                             runReserve(row); // ✅ runs ONLY once
                             // handleSessionSelect(selectedSessionId!)
                             // setPendingRow(null);
+                            setDefaultSessionName(sessionName);
                             setIsSessionFormOpen(false);
                           }}
                         />
