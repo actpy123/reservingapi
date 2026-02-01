@@ -26,7 +26,8 @@ export interface ReserveCalculationResult {
 export interface Scenario {
   scenarioCode: string;
   data: { [key: string]: any }[] | null;
-  controlSheetId: string | null;
+  controlSheetId: string | null
+  inputFile: string | undefined
 }
 
 export class ApiService {
@@ -348,7 +349,7 @@ export class ApiService {
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch control sheets`);
+      throw new Error(`Failed to create  sessions`);
     }
 
     return res.json();
@@ -363,7 +364,7 @@ export class ApiService {
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch control sheets`);
+      throw new Error(`Failed to retrive sessions`);
     }
 
     return res.json();

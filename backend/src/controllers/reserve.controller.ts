@@ -88,6 +88,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     const scenarios: Scenario[] = req.body;
     const assumptionId: any = assumptions[0].assumptionId;
     const controlSheetId: any = scenarios[0].controlSheetId;
+    const inputFile: string | null = scenarios[0]?.inputFile;
     const scenarioData = scenarios?.[0]?.data;
 
     const controlSheet = scenarioData
@@ -95,7 +96,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
       : await ControlSheet.findById(controlSheetId, { data: 1 }).lean();
 
     const fileData = scenarioData ?? controlSheet?.data ?? null;
-    console.log('fileData', fileData);
+    // console.log('fileData', fileData);
 
     if (!fileData || !fileData.length) {
       res.sendCustomResponse(400, { message: 'unable to retrive file data' });
@@ -151,6 +152,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
         for (const [key, value] of Object.entries(cashflowItem)) {
           cashflowResult[index] = cashflowResult[index] ?? {};
           cashflowResult[index][key] = (cashflowResult[index][key] ?? 0) + value;
+          cashflowResult[index].Period = index;
         }
       });
     });
@@ -169,7 +171,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 
     const updateControlSheet = await ControlSheet.findByIdAndUpdate(
       controlSheetId,
-      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed' } },
+      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed', inputFile } },
       { new: true },
     );
     res.sendCustomResponse(200, {

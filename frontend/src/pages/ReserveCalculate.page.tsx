@@ -154,6 +154,7 @@ const ReserveCalculatePage: React.FC = () => {
           scenarioCode: row.productCode,
           data: policies,
           controlSheetId,
+          inputFile: row?.inputFile?.name
         },
       ];
 
@@ -252,11 +253,11 @@ const ReserveCalculatePage: React.FC = () => {
       setControlSheets(
         res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: String(index + 1),
+          runNo: item.rowNumber || String(index + 1),
           productCode: item.scenarioCode,
           runIndicator: "Yes",
           inputFilePath: item.inputFilePath,
-          inputFile: null,
+          inputFile: {name: item.inputFile},
           outputFilePath: item.outPutUrl,
           execution: item.execution ?? "Pending",
           progress:
