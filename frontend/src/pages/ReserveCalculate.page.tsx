@@ -42,7 +42,7 @@ const ReserveCalculatePage: React.FC = () => {
     setIsFormOpen(false);
   };
 
-  const handleDeleteRow = (id: string) => {
+      const handleDeleteRow = async (id: string) => {
     const ok = window.confirm("Delete this control sheet entry?");
     if (!ok) return;
 
@@ -55,7 +55,6 @@ const ReserveCalculatePage: React.FC = () => {
           return;
         }
 
-        // ✅ update UI
         setControlSheets((prev) =>
           prev.filter((row) => row.id !== id)
         );
@@ -65,7 +64,7 @@ const ReserveCalculatePage: React.FC = () => {
       }
   };
 
-  const runReserve = async (row: ControlSheet) => {
+  const runReserve = async (row: ControlSheet, updatedSessionName?: string) => {
     try {
       if (backendStatus === "offline") {
         alert(
@@ -85,7 +84,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       if (!sessionId) {
         setIsSessionFormOpen(true);
-        payload.sessionName = defaultSessionName;
+        payload.sessionName = updatedSessionName?? defaultSessionName;
       } else {
         payload.sessionId = sessionId;
       }
@@ -267,10 +266,11 @@ const ReserveCalculatePage: React.FC = () => {
         replace: true,
       });
       const res = await ApiService.getControlSheets(sessionId);
+      let totalLength = res.data?.length || 0;
       setControlSheets(
         res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: item.rowNumber || String(index + 1),
+          runNo: item.rowNumber || String(totalLength--),
           productCode: item.scenarioCode,
           runIndicator: "Yes",
           inputFilePath: item.inputFilePath,
@@ -314,6 +314,7 @@ const ReserveCalculatePage: React.FC = () => {
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
           currentSessionName={defaultSessionName}
+          currentSessionId={selectedSessionId}  
         />
       </div>
       <div style={{ padding: "16px" }}>
@@ -498,10 +499,11 @@ const ReserveCalculatePage: React.FC = () => {
                           sessionName={defaultSessionName}
                           setSessionName={setDefaultSessionName}
                           onSave={(sessionName) => {
-                            runReserve(row); // ✅ runs ONLY once
+                            setDefaultSessionName(sessionName);
+                            runReserve(row,sessionName); // runs ONLY once
                             // handleSessionSelect(selectedSessionId!)
                             // setPendingRow(null);
-                            setDefaultSessionName(sessionName);
+                            
                             setIsSessionFormOpen(false);
                           }}
                         />

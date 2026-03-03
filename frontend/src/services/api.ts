@@ -355,6 +355,18 @@ export class ApiService {
     return res.json();
   }
 
+  static async deleteControlSheets(id: string) {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/control/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to delete control sheet`);
+    }
+
+    return res.json();
+  }
+
   static async getSessions() {
     const res = await apiFetch(`${API_BASE_URL}/reserve/sessions`, {
       headers: {

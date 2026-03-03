@@ -12,23 +12,21 @@ type SessionHistoryProps = {
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
   currentSessionName?: string | null;
+  currentSessionId?: string | null;
 };
 
 function SessionHistory({
   onSessionSelect,
   onNewSession,
   currentSessionName,
+  currentSessionId,
 }: SessionHistoryProps) {
-  // console.log()
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
-    LOADING_STATUS.IDLE,
+    LOADING_STATUS.IDLE
   );
   const [showUnsavedSession, setShowUnsavedSession] = useState(true);
-  const [hasAutoSelected] = useState(false);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null,
-  );
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionsApiStatus === LOADING_STATUS.IDLE) {
@@ -55,7 +53,19 @@ function SessionHistory({
           setSessionsApiStatus(LOADING_STATUS.ERROR);
         });
     }
-  }, [sessionsApiStatus, hasAutoSelected, onSessionSelect]);
+  }, [sessionsApiStatus, onSessionSelect]);
+
+  const handleNewSession = () => {
+    if (!currentSessionId) {
+      // window.location.search = ""; 
+      return;
+    }
+
+    setShowUnsavedSession(true);
+    setSelectedSessionId(null); 
+    onNewSession(); 
+    setSessionsApiStatus(LOADING_STATUS.IDLE);
+  };
 
   const renderSessionList = () => {
     if (!Array.isArray(sessions)) return null;
@@ -72,6 +82,8 @@ function SessionHistory({
             onClick={() => {
               setSelectedSessionId(session.id);
               onSessionSelect(session.id);
+              setShowUnsavedSession(false);
+              setSessionsApiStatus(LOADING_STATUS.IDLE);
             }}
           >
             {session.name}
@@ -87,13 +99,9 @@ function SessionHistory({
   return (
     <div className="session-history">
       <button
-        onClick={() => {
-          setShowUnsavedSession(true);
-          setSelectedSessionId(null); // unsaved becomes active
-          onNewSession();
-        }}
+        onClick={handleNewSession}
         className="bg-orange-500 text-white px-2 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
-        style={{ fontSize: 14 }}
+        style={{ fontSize: 14, marginBottom: 12, cursor: 'pointer' }}
       >
         + New Session
       </button>
@@ -114,7 +122,13 @@ function SessionHistory({
               }}
             >
               <span className="title">
-                {currentSessionName ?? "unsaved session"}
+                {/* FIX: If selectedSessionId is null, it's a fresh session.
+                   We only show currentSessionName if it actually exists AND we aren't 
+                   trying to create a brand new empty one.
+                */}
+                {selectedSessionId === null && !currentSessionId 
+                  ? "unsaved session" 
+                  : (currentSessionName ?? "unsaved session")}
               </span>
               <button>
                 <span className="material-symbols-outlined">more_vert</span>
