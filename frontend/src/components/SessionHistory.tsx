@@ -57,7 +57,7 @@ function SessionHistory({
 
   const handleNewSession = () => {
     if (!currentSessionId) {
-      // window.location.search = ""; 
+      onNewSession(); 
       return;
     }
 
