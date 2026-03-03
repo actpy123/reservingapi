@@ -306,3 +306,32 @@ export async function getAllSessionName(req: AuthenticatedRequest, res: Response
     res.sendCustomResponse(500, { message: `internal server error ${error}` });
   }
 }
+
+export async function deleteControlSheet(req: AuthenticatedRequest, res: Response) {
+  try {
+    const controlSheetId = req.params.id;
+    const user: any = req.user;
+    const controlSheet = await ControlSheet.findById(controlSheetId);
+
+    if (!controlSheet) {
+      return res.sendCustomResponse(404, { message: 'Control sheet not found' });
+    }
+
+    const session = await SessionSimulation.findOne({
+      _id: controlSheet.sessionId,
+      userId: user._id,
+    });
+
+    if (!session) {
+      return res.sendCustomResponse(403, { message: 'Unauthorized' });
+    }
+
+    // 2. Hard Delete
+    await ControlSheet.findByIdAndDelete(controlSheetId);
+
+    res.sendCustomResponse(200, { message: 'Deleted successfully' });
+  } catch (error) {
+    console.error('delete error:', error);
+    res.sendCustomResponse(500, { message: 'internal server error' });
+  }
+}

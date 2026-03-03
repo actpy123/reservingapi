@@ -45,7 +45,24 @@ const ReserveCalculatePage: React.FC = () => {
   const handleDeleteRow = (id: string) => {
     const ok = window.confirm("Delete this control sheet entry?");
     if (!ok) return;
-    setControlSheets((prev) => prev.filter((row) => row.id !== id));
+
+      try {
+        const res = await ApiService.deleteControlSheets(id);
+
+        // optional backend success check
+        if (res?.success === false) {
+          alert("Failed to delete control sheet");
+          return;
+        }
+
+        // ✅ update UI
+        setControlSheets((prev) =>
+          prev.filter((row) => row.id !== id)
+        );
+      } catch (error) {
+        console.error(error);
+        alert("Unable to delete control sheet. Please try again.");
+      }
   };
 
   const runReserve = async (row: ControlSheet) => {
