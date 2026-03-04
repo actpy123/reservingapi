@@ -42,26 +42,24 @@ const ReserveCalculatePage: React.FC = () => {
     setIsFormOpen(false);
   };
 
-      const handleDeleteRow = async (id: string) => {
+  const handleDeleteRow = async (id: string) => {
     const ok = window.confirm("Delete this control sheet entry?");
     if (!ok) return;
 
-      try {
-        const res = await ApiService.deleteControlSheets(id);
+    try {
+      const res = await ApiService.deleteControlSheets(id);
 
-        // optional backend success check
-        if (res?.success === false) {
-          alert("Failed to delete control sheet");
-          return;
-        }
-
-        setControlSheets((prev) =>
-          prev.filter((row) => row.id !== id)
-        );
-      } catch (error) {
-        console.error(error);
-        alert("Unable to delete control sheet. Please try again.");
+      // optional backend success check
+      if (res?.success === false) {
+        alert("Failed to delete control sheet");
+        return;
       }
+
+      setControlSheets((prev) => prev.filter((row) => row.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Unable to delete control sheet. Please try again.");
+    }
   };
 
   const runReserve = async (row: ControlSheet, updatedSessionName?: string) => {
@@ -84,7 +82,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       if (!sessionId) {
         setIsSessionFormOpen(true);
-        payload.sessionName = updatedSessionName?? defaultSessionName;
+        payload.sessionName = updatedSessionName ?? defaultSessionName;
       } else {
         payload.sessionId = sessionId;
       }
@@ -170,7 +168,7 @@ const ReserveCalculatePage: React.FC = () => {
           scenarioCode: row.productCode,
           data: policies,
           controlSheetId,
-          inputFile: row?.inputFile?.name
+          inputFile: row?.inputFile?.name,
         },
       ];
 
@@ -268,13 +266,13 @@ const ReserveCalculatePage: React.FC = () => {
       const res = await ApiService.getControlSheets(sessionId);
       let totalLength = res.data?.length || 0;
       setControlSheets(
-        res.data.map((item: any, index: number) => ({
+        res.data.map((item: any) => ({
           id: item._id, // required
           runNo: item.rowNumber || String(totalLength--),
           productCode: item.scenarioCode,
           runIndicator: "Yes",
           inputFilePath: item.inputFilePath,
-          inputFile: {name: item.inputFile},
+          inputFile: { name: item.inputFile },
           outputFilePath: item.outPutUrl,
           execution: item.execution ?? "Pending",
           progress:
@@ -314,7 +312,7 @@ const ReserveCalculatePage: React.FC = () => {
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
           currentSessionName={defaultSessionName}
-          currentSessionId={selectedSessionId}  
+          currentSessionId={selectedSessionId}
         />
       </div>
       <div style={{ padding: "16px" }}>
@@ -500,10 +498,10 @@ const ReserveCalculatePage: React.FC = () => {
                           setSessionName={setDefaultSessionName}
                           onSave={(sessionName) => {
                             setDefaultSessionName(sessionName);
-                            runReserve(row,sessionName); // runs ONLY once
+                            runReserve(row, sessionName); // runs ONLY once
                             // handleSessionSelect(selectedSessionId!)
                             // setPendingRow(null);
-                            
+
                             setIsSessionFormOpen(false);
                           }}
                         />
