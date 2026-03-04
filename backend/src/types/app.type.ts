@@ -2,6 +2,7 @@ export type Scenario = {
   scenarioCode: string;
   data: { [key: string]: any }[];
   controlSheetId:string;
+  inputFile: string | null;
 };
 
 export interface PolicySummary {

@@ -7,6 +7,7 @@ import {
   getCurrentAssumptions,
   reserveCalculator,
   uploadAssumptions,
+  deleteControlSheet
 } from '@controllers/reserve.controller';
 import { authenticateRequest } from '@middlewares/authenticateMiddleware';
 import { Router } from 'express';
@@ -24,5 +25,6 @@ orderRoute.get('/download/cashflow/:id', authenticateRequest, downloadCashflow);
 orderRoute.post('/save', authenticateRequest, createSessionSimulation); //create new session
 orderRoute.get('/control/:id', authenticateRequest, controlSheet); //get control sheet for particular session
 orderRoute.get('/sessions', authenticateRequest, getAllSessionName); //get all session name and id based on user
+orderRoute.delete('/control/:id', authenticateRequest, deleteControlSheet); //delete control sheet for particular session
 
 export default orderRoute;

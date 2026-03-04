@@ -11,6 +11,7 @@ const controlSheetSchema = new Schema(
     scenarioCode: { type: String, required: true },
 
     inputFilePath: { type: String },
+    inputFile: { type: String },
     outputFilePath: { type: String },
 
     execution: { type: Schema.Types.Mixed },

@@ -42,13 +42,29 @@ const ReserveCalculatePage: React.FC = () => {
     setIsFormOpen(false);
   };
 
-  const handleDeleteRow = (id: string) => {
+      const handleDeleteRow = async (id: string) => {
     const ok = window.confirm("Delete this control sheet entry?");
     if (!ok) return;
-    setControlSheets((prev) => prev.filter((row) => row.id !== id));
+
+      try {
+        const res = await ApiService.deleteControlSheets(id);
+
+        // optional backend success check
+        if (res?.success === false) {
+          alert("Failed to delete control sheet");
+          return;
+        }
+
+        setControlSheets((prev) =>
+          prev.filter((row) => row.id !== id)
+        );
+      } catch (error) {
+        console.error(error);
+        alert("Unable to delete control sheet. Please try again.");
+      }
   };
 
-  const runReserve = async (row: ControlSheet) => {
+  const runReserve = async (row: ControlSheet, updatedSessionName?: string) => {
     try {
       if (backendStatus === "offline") {
         alert(
@@ -68,7 +84,7 @@ const ReserveCalculatePage: React.FC = () => {
 
       if (!sessionId) {
         setIsSessionFormOpen(true);
-        payload.sessionName = defaultSessionName;
+        payload.sessionName = updatedSessionName?? defaultSessionName;
       } else {
         payload.sessionId = sessionId;
       }
@@ -154,6 +170,7 @@ const ReserveCalculatePage: React.FC = () => {
           scenarioCode: row.productCode,
           data: policies,
           controlSheetId,
+          inputFile: row?.inputFile?.name
         },
       ];
 
@@ -249,14 +266,15 @@ const ReserveCalculatePage: React.FC = () => {
         replace: true,
       });
       const res = await ApiService.getControlSheets(sessionId);
+      let totalLength = res.data?.length || 0;
       setControlSheets(
         res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: String(index + 1),
+          runNo: item.rowNumber || String(totalLength--),
           productCode: item.scenarioCode,
           runIndicator: "Yes",
           inputFilePath: item.inputFilePath,
-          inputFile: null,
+          inputFile: {name: item.inputFile},
           outputFilePath: item.outPutUrl,
           execution: item.execution ?? "Pending",
           progress:
@@ -296,6 +314,7 @@ const ReserveCalculatePage: React.FC = () => {
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
           currentSessionName={defaultSessionName}
+          currentSessionId={selectedSessionId}  
         />
       </div>
       <div style={{ padding: "16px" }}>
@@ -480,10 +499,11 @@ const ReserveCalculatePage: React.FC = () => {
                           sessionName={defaultSessionName}
                           setSessionName={setDefaultSessionName}
                           onSave={(sessionName) => {
-                            runReserve(row); // ✅ runs ONLY once
+                            setDefaultSessionName(sessionName);
+                            runReserve(row,sessionName); // runs ONLY once
                             // handleSessionSelect(selectedSessionId!)
                             // setPendingRow(null);
-                            setDefaultSessionName(sessionName);
+                            
                             setIsSessionFormOpen(false);
                           }}
                         />

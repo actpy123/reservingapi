@@ -88,6 +88,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     const scenarios: Scenario[] = req.body;
     const assumptionId: any = assumptions[0].assumptionId;
     const controlSheetId: any = scenarios[0].controlSheetId;
+    const inputFile: string | null = scenarios[0]?.inputFile;
     const scenarioData = scenarios?.[0]?.data;
 
     const controlSheet = scenarioData
@@ -95,7 +96,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
       : await ControlSheet.findById(controlSheetId, { data: 1 }).lean();
 
     const fileData = scenarioData ?? controlSheet?.data ?? null;
-    console.log('fileData', fileData);
+    // console.log('fileData', fileData);
 
     if (!fileData || !fileData.length) {
       res.sendCustomResponse(400, { message: 'unable to retrive file data' });
@@ -151,6 +152,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
         for (const [key, value] of Object.entries(cashflowItem)) {
           cashflowResult[index] = cashflowResult[index] ?? {};
           cashflowResult[index][key] = (cashflowResult[index][key] ?? 0) + value;
+          cashflowResult[index].Period = index;
         }
       });
     });
@@ -169,7 +171,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 
     const updateControlSheet = await ControlSheet.findByIdAndUpdate(
       controlSheetId,
-      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed' } },
+      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed', inputFile } },
       { new: true },
     );
     res.sendCustomResponse(200, {
@@ -190,7 +192,6 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 
 export async function createSessionSimulation(req: AuthenticatedRequest, res: Response) {
   const user: any = req.user;
-  console.log(req.body);
   const { scenarioCode, inputFilePath, sessionId, sessionName } = req.body;
 
   try {
@@ -246,7 +247,7 @@ export async function controlSheet(req: AuthenticatedRequest, res: Response) {
     // Fetch control sheets for this session + user
     const controlSheets = await ControlSheet.find({
       sessionId,
-    });
+    }).sort({ createdAt: -1 });
     res.sendCustomResponse(200, { data: controlSheets });
     return;
   } catch (error) {
@@ -302,5 +303,34 @@ export async function getAllSessionName(req: AuthenticatedRequest, res: Response
   } catch (error) {
     console.log('error', error);
     res.sendCustomResponse(500, { message: `internal server error ${error}` });
+  }
+}
+
+export async function deleteControlSheet(req: AuthenticatedRequest, res: Response) {
+  try {
+    const controlSheetId = req.params.id;
+    const user: any = req.user;
+    const controlSheet = await ControlSheet.findById(controlSheetId);
+
+    if (!controlSheet) {
+      return res.sendCustomResponse(404, { message: 'Control sheet not found' });
+    }
+
+    const session = await SessionSimulation.findOne({
+      _id: controlSheet.sessionId,
+      userId: user._id,
+    });
+
+    if (!session) {
+      return res.sendCustomResponse(403, { message: 'Unauthorized' });
+    }
+
+    // 2. Hard Delete
+    await ControlSheet.findByIdAndDelete(controlSheetId);
+
+    res.sendCustomResponse(200, { message: 'Deleted successfully' });
+  } catch (error) {
+    console.error('delete error:', error);
+    res.sendCustomResponse(500, { message: 'internal server error' });
   }
 }

@@ -9,7 +9,6 @@ interface ControlSheetFormProps {
 }
 
 const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
-  sessionId,
   onSubmit,
   onClose,
 }) => {
@@ -60,22 +59,9 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    console.log('sessionId',sessionId);
-    // const res = await ApiService.createSessionSimulation({
-    //   ...formData,
-    //   sessionId, 
-    //   inputFilePath: `${inputFileHandler.selectedFile?.name}`,
-    //   scenarioCode: formData.productCode,
-    // });
-
-
-  // 👇 extract sessionId (backend creates it if missing)
-  // const createdSessionId = res.data.session._id;
-
     await onSubmit({
       ...formData,
       inputFile: inputFileHandler.selectedFile,
-      // sessionId:createdSessionId
     });
 
     setIsSubmitting(false);
