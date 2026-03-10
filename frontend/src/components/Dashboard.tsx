@@ -177,20 +177,8 @@ const Dashboard: React.FC = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-8 min-w-0">
-          <div className="max-w-7xl mx-auto">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 8, scale: 0.995 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.995 }}
-                transition={{ duration: 0.15, ease: [0.22, 0.61, 0.36, 1] }}
-              >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+        <main>
+          <Outlet />
         </main>
       </div>
     </div>

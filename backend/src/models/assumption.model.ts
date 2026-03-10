@@ -5,6 +5,7 @@ export interface IAssumption {
   data?: any[]; // You can type this if you know the exact structure
   assumptionId?: Types.ObjectId; // Proper ObjectId type
   userId: Types.ObjectId; // Proper ObjectId type
+  sessionId: Types.ObjectId; // Proper ObjectId type
   valid?: boolean; // new field
 }
 
@@ -17,8 +18,9 @@ const AssumptionSchema = new Schema<AssumptionDocument>(
     assumptionId: { type: String, required: true },
     valid: { type: Boolean, default: true }, // default to true,
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
+    sessionId: { type: Schema.Types.ObjectId, ref: 'SessionSimulation' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const AssumptionModel = model<AssumptionDocument>('Assumptions', AssumptionSchema);

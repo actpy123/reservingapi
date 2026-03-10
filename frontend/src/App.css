@@ -1,3 +1,11 @@
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 200,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
 html {
   overflow: hidden;
 }
@@ -5,4 +13,8 @@ html {
 body {
   height: 100vh;
   max-height: 100vh;
+}
+
+main {
+  width: 100%;
 }

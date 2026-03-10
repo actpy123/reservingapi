@@ -14,7 +14,7 @@ import { ReserveResultModel } from '@models/reserve-result.model';
 import { AuthenticatedRequest } from '@middlewares/authenticateMiddleware';
 import { SessionSimulation } from '@models/session.model';
 import { ControlSheet } from '@models/control-sheet.model';
-import { Types } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 
 export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Response) {
   try {
@@ -35,6 +35,15 @@ export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Resp
 export async function uploadAssumptions(req: AuthenticatedRequest, res: Response) {
   const user: any = req.user; // 👈 Type assertion here
   const assumptionFileZip = req.file as Express.Multer.File; // 👈 Type assertion here
+  const sessionId: string = req.body.sessionId as string;
+
+  if (!isValidObjectId(sessionId)) {
+    console.log('isSessionExist', false); // Invalid format means it can't exist
+    return res.status(400).send('Session does not Exist');
+  }
+
+  const isSessionExist = !!(await ReserveResultModel.exists({ _id: sessionId }));
+  console.log('isSessionExist', isSessionExist);
 
   if (!assumptionFileZip) {
     return res.status(400).send('No file uploaded');
@@ -188,6 +197,23 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     return;
     // skippedPolicies += 1;
   }
+}
+
+export async function createEmptySession(req: AuthenticatedRequest, res: Response) {
+  const user: any = req.user;
+  const { sessionName } = req.body;
+
+  if (typeof sessionName !== 'string' || sessionName.length < 3) {
+    res.sendCustomResponse(400, { message: `Session Name Invalid` });
+    return;
+  }
+
+  const session = await SessionSimulation.create({
+    userId: user._id,
+    name: sessionName,
+  });
+
+  res.sendCustomResponse(200, { data: session });
 }
 
 export async function createSessionSimulation(req: AuthenticatedRequest, res: Response) {
