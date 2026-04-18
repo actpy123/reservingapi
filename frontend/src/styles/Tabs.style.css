@@ -1,0 +1,18 @@
+.tabs {
+  border-bottom: 1px solid rgb(229 231 235 / var(--tw-divide-opacity, 1));
+}
+
+.tab-button {
+  color: rgb(229 231 235 / var(--tw-divide-opacity, 1));
+
+  .active {
+    border-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+    color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+  }
+}
+
+.active {
+  border-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+  color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+  border-width-bottom: 2px;
+}

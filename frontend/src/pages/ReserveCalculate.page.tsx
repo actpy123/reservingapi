@@ -4,12 +4,13 @@ import { ApiService } from "../services/api";
 import type { Scenario } from "../services/api";
 import { parseCsvToObjects } from "../utils/csv.utils";
 import { useBackendStatus } from "../hooks";
-import type { ControlSheet } from "../types/controlSheet";
+import type { ControlSheet, Tab } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";
 import { apiFetch } from "../interceptor/auth.interceptor";
 import { useNavigate } from "react-router-dom";
 import SaveSessionModal from "../components/SaveSessionModal";
 import NoSessionScreen from "../components/NoSessionScreen";
+import Tabs from "../components/Tabs";
 
 const ReserveCalculatePage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -320,6 +321,12 @@ const ReserveCalculatePage: React.FC = () => {
         {!selectedSessionId && <NoSessionScreen />}
         {selectedSessionId && (
           <>
+            <Tabs
+              tabs={[
+                { label: "Assumptions" } as Tab,
+                { label: "Control Sheets" } as Tab,
+              ]}
+            ></Tabs>
             <div className="flex items-center justify-between mb-6">
               <div></div>
               <div>

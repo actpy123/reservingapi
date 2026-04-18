@@ -23,3 +23,7 @@ export enum LOADING_STATUS {
   LOADED = 2,
   ERROR = 3,
 }
+export interface Tab {
+  label: string;
+  content: React.ReactNode | null | undefined;
+}
