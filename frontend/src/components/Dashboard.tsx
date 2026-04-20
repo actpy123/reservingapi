@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
                 />
               </div>
             )}
-            <button
+            {/* <button
               type="button"
               onClick={() => setIsSidebarCollapsed((v) => !v)}
               className="ml-auto bg-white/10 hover:bg-white/20 rounded px-2 py-1 text-sm"
@@ -51,12 +51,12 @@ const Dashboard: React.FC = () => {
                   d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
-            </button>
+            </button> */}
           </div>
           <nav className="px-2 space-y-2 flex-1">
             {!isSidebarCollapsed ? (
               <>
-                <NavLink
+                {/* <NavLink
                   to="/assumptions"
                   className={(args: { isActive: boolean }) =>
                     `${args.isActive ? "bg-white text-blue-800" : "bg-white/0 hover:bg-white/10 text-white"} w-full rounded-full px-3 py-3 text-left transition-colors whitespace-nowrap truncate block`
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
                   title="Assumptions"
                 >
                   Assumptions
-                </NavLink>
+                </NavLink> */}
                 <NavLink
                   to="/reserve"
                   className={(args: { isActive: boolean }) =>
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
               </>
             ) : (
               <>
-                <NavLink
+                {/* <NavLink
                   to="/assumptions"
                   className={(args: { isActive: boolean }) =>
                     `${args.isActive ? "bg-white text-blue-800" : "bg-white/0 hover:bg-white/10 text-white"} w-10 h-10 rounded-full flex items-center justify-center transition-colors`
@@ -99,7 +99,7 @@ const Dashboard: React.FC = () => {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
-                </NavLink>
+                </NavLink> */}
                 <NavLink
                   to="/reserve"
                   className={(args: { isActive: boolean }) =>
@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </nav>
-          <div className="p-4 mt-auto border-t border-white/20">
+          <div className="flex h-[56px] items-center justify-center border-t border-white/20">
             {!isSidebarCollapsed ? (
               <button
                 type="button"
@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto"
+                className="w-10 h-10 bg-red-600 items-center  text-white rounded-full flex items-center justify-center mx-auto"
                 title="Logout"
                 aria-label="Logout"
               >

@@ -1,7 +1,10 @@
-import React from "react";
 import "../styles/NoSessionScreen.css";
 
-const NoSessionScreen: React.FC = () => {
+interface NoSessionScreenProps {
+  onNewSession: () => void;
+}
+
+function NoSessionScreen({ onNewSession }: NoSessionScreenProps) {
   return (
     <div className="no-session-container">
       <div className="no-session-content">
@@ -13,13 +16,15 @@ const NoSessionScreen: React.FC = () => {
           You currently have no active session.
         </p>
         <p className="no-session-message">
-          Please click on the{" "}
-          <strong className="no-session-button">New Session</strong> button to
-          create a new session.
+          Please click on the
+          <a className="no-session-button" onClick={onNewSession}>
+            {` New Session  `}
+          </a>
+          button to create a new session.
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default NoSessionScreen;

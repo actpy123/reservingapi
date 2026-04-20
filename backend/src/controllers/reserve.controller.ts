@@ -19,7 +19,8 @@ import { isValidObjectId, Types } from 'mongoose';
 export async function getCurrentAssumptions(req: AuthenticatedRequest, res: Response) {
   try {
     const user: any = req.user; // ✅ always defined here
-    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
+    const { sessionId } = req.query; // ✅ always defined here
+    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id, sessionId }).lean<Assumption[]>();
     // You could process files here or send them back
     res.sendCustomResponse(200, {
       message: 'Files uploaded and stored in memory.',
@@ -42,15 +43,14 @@ export async function uploadAssumptions(req: AuthenticatedRequest, res: Response
     return res.status(400).send('Session does not Exist');
   }
 
-  const isSessionExist = !!(await ReserveResultModel.exists({ _id: sessionId }));
-  console.log('isSessionExist', isSessionExist);
+  const isSessionExist = !!(await SessionSimulation.exists({ _id: sessionId }));
 
-  if (!assumptionFileZip) {
+  if (!assumptionFileZip || !isSessionExist) {
     return res.status(400).send('No file uploaded');
   }
   try {
     const extractedFiles = unzip(assumptionFileZip.buffer);
-    await AssumptionModel.updateMany({ valid: true }, { $set: { valid: false } });
+    await AssumptionModel.updateMany({ valid: true, sessionId, userId: user._id }, { $set: { valid: false } });
     const assumptionId = randomUUID();
 
     const assumptions = [];
@@ -64,7 +64,7 @@ export async function uploadAssumptions(req: AuthenticatedRequest, res: Response
           header: true, // First row as header
           skipEmptyLines: true,
         });
-        assumptions.push({ name: assumptionName, data: result.data, assumptionId, userId: user._id });
+        assumptions.push({ name: assumptionName, data: result.data, assumptionId, sessionId, userId: user._id });
       }
     }
     const saved = await AssumptionModel.insertMany(assumptions);

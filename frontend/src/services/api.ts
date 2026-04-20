@@ -26,8 +26,8 @@ export interface ReserveCalculationResult {
 export interface Scenario {
   scenarioCode: string;
   data: { [key: string]: any }[] | null;
-  controlSheetId: string | null
-  inputFile: string | undefined
+  controlSheetId: string | null;
+  inputFile: string | undefined;
 }
 
 export class ApiService {
@@ -53,9 +53,11 @@ export class ApiService {
     return data;
   }
 
-  static async getAssumptions(): Promise<Assumption[]> {
+  static async getAssumptions(sessionId: string): Promise<Assumption[]> {
     try {
-      const response = await apiFetch(`${API_BASE_URL}/reserve/assumptions`);
+      const response = await apiFetch(
+        `${API_BASE_URL}/reserve/assumptions?sessionId=${sessionId}`,
+      );
       const result: ApiResponse<{ files: Assumption[] }> =
         await response.json();
       const files = result.data?.files || [];
@@ -203,10 +205,12 @@ export class ApiService {
 
   static async uploadAssumptions(
     file: File,
-  ): Promise<{ files: Assumption[]; assumptionId: string }> {
+    sessionId: string,
+  ): Promise<{ files: Assumption[]; sessionId: string; assumptionId: string }> {
     try {
       const formData = new FormData();
       formData.append("files", file);
+      formData.append("sessionId", sessionId);
       const response = await apiFetch(`${API_BASE_URL}/reserve/assumptions`, {
         method: "POST",
         body: formData,
@@ -339,8 +343,8 @@ export class ApiService {
     return res.json();
   }
 
-  static async createSessionSimulation(data: any) {
-    const res = await apiFetch(`${API_BASE_URL}/reserve/save`, {
+  static async createSession(data: any) {
+    const res = await apiFetch(`${API_BASE_URL}/reserve/create-session`, {
       headers: {
         "Content-Type": "application/json",
       },

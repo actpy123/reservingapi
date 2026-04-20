@@ -4,12 +4,17 @@ import "../styles/save-session.css";
 type ModalProps = {
   open: boolean;
   onClose: () => void;
-  sessionName: string;
+  sessionName: string | null;
   setSessionName: (value: string) => void;
   onSave: (sessionName: string) => void;
 };
 
-function SaveSessionModal({ open, onClose, sessionName, onSave }: ModalProps) {
+function SaveSessionModal({
+  open,
+  onClose,
+  sessionName = null,
+  onSave,
+}: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [sessionNameLocal, setSessionNameLocal] = useState(sessionName);
 
@@ -75,7 +80,7 @@ function SaveSessionModal({ open, onClose, sessionName, onSave }: ModalProps) {
           <button
             className="bg-orange-500 disabled:bg-gray-300 text-white px-4 py-1 rounded-full font-semibold shadow hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300"
             onClick={onSaveCallback}
-            disabled={!sessionNameLocal.length}
+            disabled={!sessionNameLocal || !sessionNameLocal.length}
           >
             Save Session
           </button>

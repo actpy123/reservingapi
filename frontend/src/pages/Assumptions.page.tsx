@@ -1,14 +1,22 @@
-import React from "react";
 import { ApiService } from "../services/api";
 import { useAsyncEffect, useFileHandler, useFileUpload } from "../hooks";
+import { useEffect } from "react";
 
-const Assumptions: React.FC = () => {
+interface AssumptionProps {
+  sessionId: string | null;
+}
+function Assumptions({ sessionId }: AssumptionProps) {
+  useEffect(() => {}, [sessionId]);
+
   const {
     data: assumptions,
     loading,
     error: loadError,
     refetch,
-  } = useAsyncEffect(() => ApiService.getAssumptions(), []);
+  } = useAsyncEffect(() => {
+    if (!sessionId) return Promise.resolve([]);
+    return ApiService.getAssumptions(sessionId);
+  }, [sessionId]);
 
   const {
     selectedFile,
@@ -37,7 +45,7 @@ const Assumptions: React.FC = () => {
 
   const error = loadError || fileError || uploadError;
 
-  const handleUpload = () => upload(selectedFile, clearFile);
+  const handleUpload = () => upload(selectedFile, sessionId!, clearFile);
 
   const formatDataPreview = (data: any[]) => {
     if (!data || data.length === 0) return "No data";
@@ -54,7 +62,7 @@ const Assumptions: React.FC = () => {
               {columns.map((col) => (
                 <th
                   key={col}
-                  className="px-2 py-1 text-left font-medium text-gray-700 border"
+                  className="px-2 py-1 text-left font-medium text-gray-700 border border-x-0"
                 >
                   {col}
                 </th>
@@ -63,7 +71,7 @@ const Assumptions: React.FC = () => {
           </thead>
           <tbody>
             {previewRows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-t">
+              <tr key={rowIndex} className="border border-x-0-t">
                 {columns.map((col) => {
                   const normalize = (k: any) =>
                     String(k)
@@ -77,7 +85,10 @@ const Assumptions: React.FC = () => {
                   const value = normalizedRow[normalize(col)] ?? "";
                   const text = String(value);
                   return (
-                    <td key={col} className="px-2 py-1 border text-gray-600">
+                    <td
+                      key={col}
+                      className="px-2 py-1 border border-x-0 text-gray-600"
+                    >
                       {text.substring(0, 20)}
                       {text.length > 20 ? "..." : ""}
                     </td>
@@ -93,16 +104,7 @@ const Assumptions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-bs font-bold text-gray-900 mb-2">
-            Assumptions Management
-          </h1>
-          <div className="w-20 h-1 bg-accent-500"></div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white border border-x-0 p-6">
         <h2 className="text-xs font-semibold text-gray-900 mb-4">
           Upload Assumptions
         </h2>
@@ -115,11 +117,12 @@ const Assumptions: React.FC = () => {
               Select ZIP file containing CSV assumptions
             </label>
             <input
+              key={sessionId}
               id="file-input"
               type="file"
               accept=".zip"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent-50 file:text-accent-700 hover:file:bg-accent-100"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border border-x-0-0 file:text-sm file:font-semibold file:bg-accent-50 file:text-accent-700 hover:file:bg-accent-100"
             />
           </div>
           {selectedFile && (
@@ -138,7 +141,7 @@ const Assumptions: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-50 border border-x-0 border border-x-0-red-200 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
@@ -160,7 +163,7 @@ const Assumptions: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg border">
+      <div className="bg-white  border border-x-0">
         <div className="bg-brand-50 px-6 py-4">
           <h2 className="text-xs font-semibold text-gray-900">
             Current Assumptions
@@ -173,7 +176,7 @@ const Assumptions: React.FC = () => {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="p-6 animate-pulse">
                   <div className="h-4 w-40 bg-gray-200 rounded mb-3" />
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50  p-4">
                     <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
                     <div className="h-24 bg-gray-100 rounded" />
                   </div>
@@ -217,7 +220,7 @@ const Assumptions: React.FC = () => {
                     ID: {assumption.assumptionId}
                   </span>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50  p-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Data Preview
                   </h4>
@@ -230,6 +233,6 @@ const Assumptions: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Assumptions;

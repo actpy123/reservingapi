@@ -3,7 +3,7 @@
 }
 
 .tab-button {
-  color: rgb(229 231 235 / var(--tw-divide-opacity, 1));
+  color: rgb(176 176 176);
 
   .active {
     border-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));

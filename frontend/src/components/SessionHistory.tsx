@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { ApiService } from "../services/api";
 import "../styles/session-history.style.css";
 import { LOADING_STATUS } from "../types/controlSheet";
@@ -21,12 +21,20 @@ function SessionHistory({
   currentSessionId,
 }: SessionHistoryProps) {
   const [sessions, setSessions] = useState<Session[] | null>(null);
+
   const [sessionsApiStatus, setSessionsApiStatus] = useState<LOADING_STATUS>(
     LOADING_STATUS.IDLE,
   );
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (currentSessionId) {
+      setSelectedSessionId(currentSessionId);
+      setSessionsApiStatus(LOADING_STATUS.IDLE);
+    }
+  }, [currentSessionId]);
 
   useEffect(() => {
     if (sessionsApiStatus === LOADING_STATUS.IDLE) {
@@ -102,11 +110,6 @@ function SessionHistory({
       >
         + New Session
       </button>
-
-      <div className="title">
-        <span className="material-symbols-outlined">view_headline</span>
-        <h2>Your Sessions</h2>
-      </div>
 
       <div className="session-list">
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
