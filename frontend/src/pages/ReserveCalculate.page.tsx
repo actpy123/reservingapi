@@ -31,7 +31,7 @@ const ReserveCalculatePage: React.FC = () => {
   const handleControlSheet = () => setIsFormOpen(true);
   const handleFormClose = () => setIsFormOpen(false);
 
-  const handleFormSubmit = (formData: any) => {
+  const handleFormSubmit = async (formData: any) => {
     const newRow: ControlSheet = {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       runNo: String(formData.serialNo || ""),
@@ -43,8 +43,17 @@ const ReserveCalculatePage: React.FC = () => {
       execution: "Pending",
       progress: 0,
     };
-    setControlSheets((prev) => [newRow, ...prev]);
-    setIsFormOpen(false);
+    try {
+      await ApiService.createControlSheet({
+        scenarioCode: newRow.productCode,
+        inputFilePath: newRow.inputFilePath,
+        sessionId: selectedSessionId!,
+      });
+      setControlSheets((prev) => [newRow, ...prev]);
+      setIsFormOpen(false);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleDeleteRow = async (id: string) => {
@@ -67,8 +76,9 @@ const ReserveCalculatePage: React.FC = () => {
     }
   };
 
-  const runReserve = async (row: ControlSheet, updatedSessionName?: string) => {
+  const runReserve = async (row: ControlSheet) => {
     try {
+      const { controlSheetId } = row;
       if (backendStatus === "offline") {
         alert(
           "Backend is offline. Please check the backend connection and try again.",
@@ -76,41 +86,14 @@ const ReserveCalculatePage: React.FC = () => {
         return;
       }
 
-      let sessionId = new URLSearchParams(window.location.search).get(
-        "session",
-      );
-      let controlSheetId: any = row.controlSheetId;
-
       const payload: any = {
         scenarioCode: row.productCode,
       };
-
-      if (!sessionId) {
-        setIsSessionFormOpen(true);
-        payload.sessionName = updatedSessionName ?? defaultSessionName;
-      } else {
-        payload.sessionId = sessionId;
-      }
-
-      if (!row.controlSheetId) {
-        const res = await ApiService.createSessionSimulation(payload);
-        sessionId = sessionId ?? res.data.session._id;
-        controlSheetId = res.data.controlSheet._id;
-        row.controlSheetId = controlSheetId;
-      } else {
-        controlSheetId = row.controlSheetId;
-      }
-
-      if (!new URLSearchParams(window.location.search).get("session")) {
-        navigate(`${window.location.pathname}?session=${sessionId}`, {
-          replace: true,
-        });
-      }
-
-      setSelectedSessionId(sessionId);
+      payload.sessionId = selectedSessionId;
 
       const scenarioValidation = await ApiService.validateScenarioCode(
         String(row.productCode || "").trim(),
+        selectedSessionId!,
       );
       if (!scenarioValidation.isValid) {
         alert(scenarioValidation.message);
@@ -177,7 +160,10 @@ const ReserveCalculatePage: React.FC = () => {
         },
       ];
 
-      const result = await ApiService.calculateReserve(scenarios);
+      const result = await ApiService.calculateReserve(
+        scenarios,
+        selectedSessionId!,
+      );
 
       const outputId = result.outputFile
         ? ApiService.extractIdFromUrl(result.outputFile)
@@ -269,11 +255,10 @@ const ReserveCalculatePage: React.FC = () => {
         replace: true,
       });
       const res = await ApiService.getControlSheets(sessionId);
-      let totalLength = res.data?.length || 0;
       setControlSheets(
-        res.data.map((item: any) => ({
+        res.data.map((item: any, index: number) => ({
           id: item._id, // required
-          runNo: item.rowNumber || String(totalLength--),
+          runNo: item.rowNumber || index + 1,
           productCode: item.scenarioCode,
           runIndicator: "Yes",
           inputFilePath: item.inputFilePath,

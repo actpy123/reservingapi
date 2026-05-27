@@ -241,6 +241,7 @@ export class ApiService {
 
   static async calculateReserve(
     scenarios: Scenario[],
+    sessionId: string,
   ): Promise<ReserveCalculationResult> {
     try {
       const response = await apiFetch(
@@ -250,7 +251,7 @@ export class ApiService {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(scenarios),
+          body: JSON.stringify({ scenarios, sessionId }),
         },
       );
       if (!response.ok) {
@@ -270,14 +271,17 @@ export class ApiService {
     }
   }
 
-  static async validateScenarioCode(scenarioCode: string): Promise<{
+  static async validateScenarioCode(
+    scenarioCode: string,
+    sessionId: string,
+  ): Promise<{
     isValid: boolean;
     message?: string;
     product?: any;
     availableScenarioCodes?: string[];
   }> {
     try {
-      const assumptions = await this.getAssumptions();
+      const assumptions = await this.getAssumptions(sessionId);
       const productMaster = assumptions.find(
         (a) => a.name === "product_master",
       );
@@ -377,6 +381,24 @@ export class ApiService {
         "Content-Type": "application/json",
       },
       method: "GET",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to retrive sessions`);
+    }
+
+    return res.json();
+  }
+
+  static async createControlSheet(data: any) {
+    const token = localStorage.getItem("authToken");
+    const res = await fetch(`${API_BASE_URL}/reserve/control`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {

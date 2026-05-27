@@ -3,12 +3,13 @@ import { ApiService } from "../services/api";
 import { useFileHandler } from "../hooks";
 
 interface ControlSheetFormProps {
-  sessionId?: string; 
+  sessionId?: string;
   onSubmit: (data: any) => void;
   onClose: () => void;
 }
 
 const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
+  sessionId,
   onSubmit,
   onClose,
 }) => {
@@ -28,25 +29,28 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
   useEffect(() => {
     (async () => {
       try {
-        setLoadingCodes(true);
-        const assumptions = await ApiService.getAssumptions();
-        const productMaster = assumptions.find(
-          (a: any) => a.name === "product_master",
-        );
-        const codes: string[] = Array.from(
-          new Set(
-            (productMaster?.data || [])
-              .map((p: any) => String(p["Scenario Code"]).trim())
-              .filter(Boolean),
-          ),
-        );
-        setScenarioCodes(codes);
+        if (sessionId) {
+          setLoadingCodes(true);
+          const assumptions = await ApiService.getAssumptions(sessionId);
+          const productMaster = assumptions.find(
+            (a: any) => a.name === "product_master",
+          );
+          const codes: string[] = Array.from(
+            new Set(
+              (productMaster?.data || [])
+                .map((p: any) => String(p["Scenario Code"]).trim())
+                .filter(Boolean),
+            ),
+          );
+          setScenarioCodes(codes);
+        }
       } catch {
+        /* empty */
       } finally {
         setLoadingCodes(false);
       }
     })();
-  }, []);
+  }, [sessionId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -113,18 +117,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Input File Path:
-            </label>
-            <input
-              type="url"
-              value={formData.inputFilePath}
-              onChange={(e) =>
-                handleInputChange("inputFilePath", e.target.value)
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-              placeholder="Enter File URL"
-            />
             <div className="flex items-center space-x-2">
               <button
                 type="button"
@@ -150,40 +142,6 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
                 {inputFileHandler.error}
               </p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              is_DB_Flag:
-            </label>
-            <div className="flex items-center space-x-6">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="isDBFlag"
-                  value="Yes"
-                  checked={formData.isDBFlag === "Yes"}
-                  onChange={(e) =>
-                    handleInputChange("isDBFlag", e.target.value)
-                  }
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span>Yes</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="isDBFlag"
-                  value="No"
-                  checked={formData.isDBFlag === "No"}
-                  onChange={(e) =>
-                    handleInputChange("isDBFlag", e.target.value)
-                  }
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span>No</span>
-              </label>
-            </div>
           </div>
 
           <div className="flex justify-end space-x-3">

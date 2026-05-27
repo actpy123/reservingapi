@@ -92,19 +92,20 @@ const piscina = new Piscina({
 export async function reserveCalculator(req: AuthenticatedRequest, res: Response) {
   try {
     const user: any = req.user; // ✅ always defined here
-    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id }).lean<Assumption[]>();
+    const { scenarios, sessionId } = req.body;
 
-    const scenarios: Scenario[] = req.body;
+    const assumptions = await AssumptionModel.find({ valid: true, userId: user._id, sessionId }).lean<Assumption[]>();
+    console.log('ASDsad');
+
     const assumptionId: any = assumptions[0].assumptionId;
     const controlSheetId: any = scenarios[0].controlSheetId;
     const inputFile: string | null = scenarios[0]?.inputFile;
-    const scenarioData = scenarios?.[0]?.data;
 
-    const controlSheet = scenarioData
-      ? await ControlSheet.findByIdAndUpdate(controlSheetId, { $set: { data: scenarioData } }, { new: true })
+    const controlSheet = scenarios
+      ? await ControlSheet.findByIdAndUpdate(controlSheetId, { $set: { data: scenarios } }, { new: true })
       : await ControlSheet.findById(controlSheetId, { data: 1 }).lean();
 
-    const fileData = scenarioData ?? controlSheet?.data ?? null;
+    const fileData = scenarios ?? controlSheet?.data ?? null;
     // console.log('fileData', fileData);
 
     if (!fileData || !fileData.length) {
@@ -250,6 +251,34 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
     return;
   } catch (error) {
     console.error('createSessionSimulation error:', error);
+    res.sendCustomResponse(500, { message: 'internal server error' });
+  }
+}
+
+export async function createControlSheet(req: AuthenticatedRequest, res: Response) {
+  try {
+    const user: any = req.user;
+    const { sessionId, scenarioCode, inputFilePath } = req.body;
+
+    const session = await SessionSimulation.findOne({
+      _id: sessionId,
+      userId: user._id,
+    });
+
+    if (!session) {
+      return res.sendCustomResponse(400, { message: 'Session not found' });
+    }
+
+    const controlSheet = await ControlSheet.create({
+      sessionId: session._id,
+      scenarioCode,
+      inputFilePath,
+      execution: 'pending',
+    });
+
+    res.sendCustomResponse(200, { data: controlSheet });
+  } catch (error) {
+    console.error('createControlSheet error:', error);
     res.sendCustomResponse(500, { message: 'internal server error' });
   }
 }

@@ -5,13 +5,21 @@
       "name": "Debug npm run dev",
       "type": "node",
       "request": "launch",
+
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+
       "console": "integratedTerminal",
+
       "restart": true,
       "protocol": "inspector",
+
+      "autoAttachChildProcesses": true,
+
       "skipFiles": ["<node_internals>/**"],
+
       "cwd": "${workspaceFolder}/backend",
+
       "env": {
         "NODE_ENV": "development"
       }

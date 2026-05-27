@@ -163,7 +163,14 @@ function Assumptions({ sessionId }: AssumptionProps) {
         </div>
       )}
 
-      <div className="bg-white  border border-x-0">
+      <div
+        className="bg-white  border border-x-0"
+        style={{
+          overflow: "auto",
+          height: "calc(100vh - 288px)",
+          width: "calc(100vw - 304px)",
+        }}
+      >
         <div className="bg-brand-50 px-6 py-4">
           <h2 className="text-xs font-semibold text-gray-900">
             Current Assumptions

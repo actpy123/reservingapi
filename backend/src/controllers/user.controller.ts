@@ -33,7 +33,7 @@ export async function login(req: Request, res: Response) {
       return res.status(401).send({ error: 'Invalid email or password' });
     }
     const token = jwt.sign({ userId: user._id }, 'mysecretkey', {
-      expiresIn: '1h',
+      expiresIn: '24h',
     });
     res.send({ token });
   } catch (err) {

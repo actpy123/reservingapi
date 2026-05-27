@@ -17,8 +17,6 @@ export const loadRoutes = (app: Express, routesPath: string) => {
         const routeName = file.split('.')[0];
         const basePath = `/api/${routeName}`;
 
-        console.log(basePath, 'dsds    ', routeModule.default);
-
         app.use(basePath, routeModule.default);
       }
     }
