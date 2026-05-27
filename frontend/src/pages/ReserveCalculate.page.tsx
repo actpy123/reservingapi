@@ -155,7 +155,7 @@ const ReserveCalculatePage: React.FC = () => {
         {
           scenarioCode: row.productCode,
           data: policies,
-          controlSheetId,
+          controlSheetId: controlSheetId || null,
           inputFile: row?.inputFile?.name,
         },
       ];

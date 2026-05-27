@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiService } from "../services/api";
 import "../styles/session-history.style.css";
 import { LOADING_STATUS } from "../types/controlSheet";
@@ -87,7 +87,7 @@ function SessionHistory({
             onClick={() => {
               setSelectedSessionId(session.id);
               onSessionSelect(session.id);
-              setShowUnsavedSession(false);
+              // setShowUnsavedSession(false);
               setSessionsApiStatus(LOADING_STATUS.IDLE);
             }}
           >

@@ -3,7 +3,7 @@ import { useAsyncEffect, useFileHandler, useFileUpload } from "../hooks";
 import { useEffect } from "react";
 
 interface AssumptionProps {
-  sessionId: string | null;
+  sessionId?: string;
 }
 function Assumptions({ sessionId }: AssumptionProps) {
   useEffect(() => {}, [sessionId]);

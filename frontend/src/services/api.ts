@@ -203,10 +203,7 @@ export class ApiService {
     });
   }
 
-  static async uploadAssumptions(
-    file: File,
-    sessionId: string,
-  ): Promise<{ files: Assumption[]; sessionId: string; assumptionId: string }> {
+  static async uploadAssumptions(file: File, sessionId: string) {
     try {
       const formData = new FormData();
       formData.append("files", file);

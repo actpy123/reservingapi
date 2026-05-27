@@ -18,8 +18,6 @@ function Simulation({
   handleControlSheet,
   handleDownload,
   handleDeleteRow,
-  selectedSessionId,
-  setIsSessionFormOpen,
   runReserve,
 }: SimulationProps) {
   return (

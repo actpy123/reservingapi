@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const location = useLocation();
+  const [isSidebarCollapsed] = useState(true);
   const navigate = useNavigate();
 
   const handleLogout = () => {

@@ -34,7 +34,7 @@ function SaveSessionModal({
   }, [open]);
 
   const onSaveCallback = useCallback(() => {
-    onSave(sessionNameLocal);
+    onSave(sessionNameLocal!);
   }, [onSave, sessionNameLocal]);
 
   return (
@@ -60,7 +60,7 @@ function SaveSessionModal({
             </label>
             <input
               type="text"
-              value={sessionNameLocal}
+              value={sessionNameLocal ?? undefined}
               onClick={() => {
                 if (sessionNameLocal === "unsaved session") {
                   setSessionNameLocal("");
