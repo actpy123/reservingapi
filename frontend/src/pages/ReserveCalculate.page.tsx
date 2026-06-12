@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import ControlSheetForm from "../components/ControlSheetForm";
 import { ApiService } from "../services/api";
-import type { Scenario } from "../services/api";
-import { parseCsvToObjects } from "../utils/csv.utils";
 import { useBackendStatus } from "../hooks";
 import type { ControlSheet, Tab } from "../types/controlSheet";
 import SessionHistory from "../components/SessionHistory";

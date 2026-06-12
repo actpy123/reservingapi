@@ -106,11 +106,7 @@ function Simulation({
                   <div className="text-center px-3">{row.productCode}</div>
                   <div
                     className="text-center px-3 truncate"
-                    title={
-                      row.inputFilePath ||
-                      (row.inputFile && row.inputFile.name) ||
-                      ""
-                    }
+                    title={row.inputFilePath || row.inputFilePath || ""}
                   >
                     {row.inputFilePath ? (
                       <button
@@ -123,7 +119,7 @@ function Simulation({
                         {row.inputFilePath}
                       </button>
                     ) : (
-                      <span>{row.inputFile?.name || "-"}</span>
+                      <span>{row.inputFilePath || "-"}</span>
                     )}
                   </div>
                   <div
