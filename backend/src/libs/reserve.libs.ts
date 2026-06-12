@@ -116,6 +116,8 @@ export function complieInputs(inputs: any, product: any) {
     compliedInputs[toVariableName(key)] = product[key];
   }
 
+  console.log(inputs);
+
   compliedInputs.policyEffectiveDate = inputs['Coverage Effective date'];
   compliedInputs.phEntryAge = toNumber(inputs['PH Entry Age']);
   compliedInputs.ptMonths = toNumber(inputs['Policy Term_Month']);

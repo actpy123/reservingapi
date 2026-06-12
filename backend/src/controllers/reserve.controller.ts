@@ -92,20 +92,17 @@ const piscina = new Piscina({
 export async function reserveCalculator(req: AuthenticatedRequest, res: Response) {
   try {
     const user: any = req.user; // ✅ always defined here
-    const { scenarios, sessionId } = req.body;
+    const { controlSheetId, sessionId } = req.body;
 
     const assumptions = await AssumptionModel.find({ valid: true, userId: user._id, sessionId }).lean<Assumption[]>();
-    console.log('ASDsad');
 
     const assumptionId: any = assumptions[0].assumptionId;
-    const controlSheetId: any = scenarios[0].controlSheetId;
-    const inputFile: string | null = scenarios[0]?.inputFile;
 
-    const controlSheet = scenarios
-      ? await ControlSheet.findByIdAndUpdate(controlSheetId, { $set: { data: scenarios } }, { new: true })
-      : await ControlSheet.findById(controlSheetId, { data: 1 }).lean();
+    console.log('con', controlSheetId);
+    const controlSheet: any = await ControlSheet.findById(controlSheetId).lean();
+    console.log('controlSheet', controlSheet);
 
-    const fileData = scenarios ?? controlSheet?.data ?? null;
+    const fileData = controlSheet?.data ?? null;
     // console.log('fileData', fileData);
 
     if (!fileData || !fileData.length) {
@@ -117,7 +114,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     let skippedPolicies = 0;
     let successfulPolicies = 0;
     let reserveResultId;
-    let product = findProductByScenario(assumptions, scenarios[0].scenarioCode);
+    let product = findProductByScenario(assumptions, controlSheet?.scenarioCode);
     product = normalizeProductPercents(product);
     const mortalityRates = loadRates(assumptions, product['Mortality Table Number']);
     const mortalityBERates = loadRates(assumptions, product['Mortality Loading BE Table Number']);
@@ -168,7 +165,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     });
 
     const reserveResult = new ReserveResultModel({
-      scenarioCode: scenarios[0].scenarioCode,
+      scenarioCode: controlSheet.scenarioCode,
       assumptionId,
       output: finalReserves.map((item) => item.output),
       cashflow: cashflowResult.filter(Boolean),
@@ -181,7 +178,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
 
     const updateControlSheet = await ControlSheet.findByIdAndUpdate(
       controlSheetId,
-      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed', inputFile } },
+      { $set: { cashFlowUrl: cashflows, outPutUrl: outputFile, success: successfulPolicies, execution: 'Completed' } },
       { new: true },
     );
     res.sendCustomResponse(200, {
@@ -240,14 +237,7 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
         name: sessionName,
       });
     }
-    const controlSheet = await ControlSheet.create({
-      sessionId: session._id,
-      scenarioCode,
-      inputFilePath,
-      execution: 'pending', // default until execution finishes
-    });
-
-    res.sendCustomResponse(200, { data: { session, controlSheet } });
+    res.sendCustomResponse(200, { data: { session } });
     return;
   } catch (error) {
     console.error('createSessionSimulation error:', error);
@@ -258,7 +248,7 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
 export async function createControlSheet(req: AuthenticatedRequest, res: Response) {
   try {
     const user: any = req.user;
-    const { sessionId, scenarioCode, inputFilePath } = req.body;
+    const { sessionId, scenarioCode, inputFilePath, data } = req.body;
 
     const session = await SessionSimulation.findOne({
       _id: sessionId,
@@ -273,6 +263,10 @@ export async function createControlSheet(req: AuthenticatedRequest, res: Respons
       sessionId: session._id,
       scenarioCode,
       inputFilePath,
+      data: Papa.parse(data, {
+        header: true, // First row as header
+        skipEmptyLines: true,
+      }).data,
       execution: 'pending',
     });
 

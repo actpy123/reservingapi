@@ -38,7 +38,7 @@ const ReserveCalculatePage: React.FC = () => {
       productCode: String(formData.productCode || ""),
       runIndicator: String(formData.isRunFlagTrue || "No"),
       inputFilePath: String(formData.inputFilePath || ""),
-      inputFile: formData.inputFile ?? null,
+      data: formData.data ?? null,
       outputFilePath: String(formData.outputFilePath || ""),
       execution: "Pending",
       progress: 0,
@@ -47,6 +47,7 @@ const ReserveCalculatePage: React.FC = () => {
       await ApiService.createControlSheet({
         scenarioCode: newRow.productCode,
         inputFilePath: newRow.inputFilePath,
+        data: newRow.data,
         sessionId: selectedSessionId!,
       });
       setControlSheets((prev) => [newRow, ...prev]);
@@ -85,83 +86,10 @@ const ReserveCalculatePage: React.FC = () => {
         );
         return;
       }
-
-      const payload: any = {
-        scenarioCode: row.productCode,
-      };
-      payload.sessionId = selectedSessionId;
-
-      const scenarioValidation = await ApiService.validateScenarioCode(
-        String(row.productCode || "").trim(),
-        selectedSessionId!,
-      );
-      if (!scenarioValidation.isValid) {
-        alert(scenarioValidation.message);
-        return;
-      }
-
       const startedAt = Date.now();
-      setControlSheets((prev) =>
-        prev.map((r) =>
-          r.id === row.id
-            ? {
-                ...r,
-                execution: "Running",
-                progress: 10,
-                outputUrl: undefined,
-                cashflowUrl: undefined,
-                outputFilePath: "",
-                execSeconds: undefined,
-                successfulPolicies: undefined,
-                skippedPolicies: undefined,
-              }
-            : r,
-        ),
-      );
-
-      let csvText = "";
-      let policies: any[] | null = null;
-
-      // 🔹 Read CSV only if source exists
-      if (row.inputFile instanceof File) {
-        csvText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(row.inputFile!);
-        });
-      } else if (row.inputFilePath) {
-        const resp = await fetch(row.inputFilePath);
-        if (resp.ok) {
-          csvText = await resp.text();
-        }
-      }
-
-      // 🔹 Parse only if csvText has content
-      if (csvText.trim().length > 0) {
-        const parsed = parseCsvToObjects(csvText);
-        policies = parsed.length > 0 ? parsed : null;
-      }
-
-      // 🔹 Update progress only when data exists
-      if (policies) {
-        setControlSheets((prev) =>
-          prev.map((r) => (r.id === row.id ? { ...r, progress: 40 } : r)),
-        );
-      }
-
-      // 🔹 Build scenarios
-      const scenarios: Scenario[] = [
-        {
-          scenarioCode: row.productCode,
-          data: policies,
-          controlSheetId: controlSheetId || null,
-          inputFile: row?.inputFile?.name,
-        },
-      ];
 
       const result = await ApiService.calculateReserve(
-        scenarios,
+        controlSheetId!,
         selectedSessionId!,
       );
 

@@ -237,7 +237,7 @@ export class ApiService {
   }
 
   static async calculateReserve(
-    scenarios: Scenario[],
+    controlSheetId: string,
     sessionId: string,
   ): Promise<ReserveCalculationResult> {
     try {
@@ -248,7 +248,7 @@ export class ApiService {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ scenarios, sessionId }),
+          body: JSON.stringify({ controlSheetId, sessionId }),
         },
       );
       if (!response.ok) {

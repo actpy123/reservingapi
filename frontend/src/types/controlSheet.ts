@@ -4,7 +4,7 @@ export interface ControlSheet {
   productCode: string;
   runIndicator: string;
   inputFilePath: string;
-  inputFile: File | null;
+  data: File | null;
   outputFilePath: string;
   execution: string;
   progress: number;

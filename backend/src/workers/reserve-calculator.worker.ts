@@ -47,7 +47,7 @@ export default async function (input: WorkerInput) {
       moratoriumPeriod: cleanPolicyData.moratoriumPeriod,
       loanInterestRate: cleanPolicyData.loanInterestRate,
     },
-    false
+    false,
   );
 
   cleanPolicyData.incomeSurvivalFactor = percentToDecimal(incomeSurvivalBenefitRates[cleanPolicyData.phEntryAge]?.[(cleanPolicyData.ptMonths / 12).toString()]) ?? 0;
@@ -64,7 +64,7 @@ export default async function (input: WorkerInput) {
     interestRates,
     loadSchedule,
     gsvRates,
-    ssvRates
+    ssvRates,
   );
 
   for (let i = reserves.length - 1; i >= 0; i--) {

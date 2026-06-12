@@ -62,11 +62,14 @@ const ControlSheetForm: React.FC<ControlSheetFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    await onSubmit({
-      ...formData,
-      inputFile: inputFileHandler.selectedFile,
-    });
+    if (inputFileHandler) {
+      const data = await inputFileHandler.selectedFile?.text();
+      onSubmit({
+        ...formData,
+        inputFilePath: inputFileHandler.selectedFile?.name ?? "",
+        data,
+      });
+    }
 
     setIsSubmitting(false);
   };
