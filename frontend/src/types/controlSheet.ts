@@ -1,5 +1,5 @@
 export interface ControlSheet {
-  id: any;
+  id?: any;
   runNo: string;
   productCode: string;
   runIndicator: string;
