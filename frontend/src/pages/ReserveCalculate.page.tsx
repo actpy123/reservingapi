@@ -31,7 +31,6 @@ const ReserveCalculatePage: React.FC = () => {
 
   const handleFormSubmit = async (formData: any) => {
     const newRow: ControlSheet = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       runNo: String(formData.serialNo || ""),
       productCode: String(formData.productCode || ""),
       runIndicator: String(formData.isRunFlagTrue || "No"),
@@ -42,13 +41,16 @@ const ReserveCalculatePage: React.FC = () => {
       progress: 0,
     };
     try {
-      await ApiService.createControlSheet({
+      const result = await ApiService.createControlSheet({
         scenarioCode: newRow.productCode,
         inputFilePath: newRow.inputFilePath,
         data: newRow.data,
         sessionId: selectedSessionId!,
       });
-      setControlSheets((prev) => [newRow, ...prev]);
+      setControlSheets((prev) => [
+        { ...newRow, controlSheetId: result.data._id },
+        ...prev,
+      ]);
       setIsFormOpen(false);
     } catch (error) {
       console.log(error);
