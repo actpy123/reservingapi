@@ -41,7 +41,7 @@ const ReserveCalculatePage: React.FC = () => {
       progress: 0,
     };
     try {
-      const result = await ApiService.createControlSheet({
+      await ApiService.createControlSheet({
         scenarioCode: newRow.productCode,
         inputFilePath: newRow.inputFilePath,
         data: newRow.data,
