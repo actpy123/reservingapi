@@ -248,7 +248,7 @@ export async function createSessionSimulation(req: AuthenticatedRequest, res: Re
 export async function createControlSheet(req: AuthenticatedRequest, res: Response) {
   try {
     const user: any = req.user;
-    const { sessionId, scenarioCode, inputFilePath, data } = req.body;
+    const { sessionId, scenarioCode, inputFilePath, data, rowNumber } = req.body;
 
     const session = await SessionSimulation.findOne({
       _id: sessionId,
@@ -268,6 +268,7 @@ export async function createControlSheet(req: AuthenticatedRequest, res: Respons
         skipEmptyLines: true,
       }).data,
       execution: 'pending',
+      rowNumber,
     });
 
     res.sendCustomResponse(200, { data: controlSheet });

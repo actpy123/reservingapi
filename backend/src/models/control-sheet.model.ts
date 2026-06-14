@@ -17,6 +17,7 @@ const controlSheetSchema = new Schema(
     execution: { type: Schema.Types.Mixed },
     progress: { type: Schema.Types.Mixed },
     execTime: { type: Number }, // seconds or ms
+    rowNumber: { type: Number }, // seconds or ms
     success: { type: Schema.Types.Int32 },
     data: { type: [Schema.Types.Mixed] },
     outPutUrl: { type: String },

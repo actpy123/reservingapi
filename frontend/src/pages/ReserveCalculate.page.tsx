@@ -45,12 +45,10 @@ const ReserveCalculatePage: React.FC = () => {
         scenarioCode: newRow.productCode,
         inputFilePath: newRow.inputFilePath,
         data: newRow.data,
+        rowNumber: newRow.runNo,
         sessionId: selectedSessionId!,
       });
-      setControlSheets((prev) => [
-        { ...newRow, controlSheetId: result.data._id },
-        ...prev,
-      ]);
+      handleSessionSelect(selectedSessionId!);
       setIsFormOpen(false);
     } catch (error) {
       console.log(error);

@@ -44,7 +44,7 @@ function Simulation({
       </div>
 
       <div className="bg-white border border-x-0">
-        <div className="bg-gray-50 px-6 py-4 rounded-t-xl">
+        <div className="bg-gray-50 px-6 py-4 rounded-t-xl" style={{ height: "92px" }}>
           <div className="grid grid-cols-11 text-sm font-semibold text-gray-700 divide-x divide-gray-200">
             <div className="text-center px-3">
               <span>Run NO.</span>
@@ -90,7 +90,7 @@ function Simulation({
         )}
 
         {controlSheets.length > 0 && (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200" style={{ maxHeight: "calc(-210px + 100vh)", overflowY: "auto" }}>
             {controlSheets
               .sort(
                 (a: any, b: any) =>
