@@ -182,7 +182,7 @@ const ReserveCalculatePage: React.FC = () => {
       });
       const res = await ApiService.getControlSheets(sessionId);
       setControlSheets(
-        res.data.map((item: any, index: number) => ({
+        res.data.sort((a, b) => a.rowNumber - b.rowNumber).map((item: any, index: number) => ({
           id: item._id, // required
           runNo: item.rowNumber || index + 1,
           productCode: item.scenarioCode,
