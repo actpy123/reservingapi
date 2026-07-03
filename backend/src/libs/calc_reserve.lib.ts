@@ -17,7 +17,6 @@ export async function calcReserve(
   const reserves = [];
   const { phEntryAge, ptMonths, pptMonths, premFq, premium, phGender, mortalityMad, morbAssumpVal, lapseAssumpVal } = inputs;
   const { ApplyMortality, ApplyMorbidity, ApplyLapse } = product;
-
   for (let duration = 1; duration < ptMonths + 2; duration++) {
     try {
       const month = ((duration - 1) % 12) + 1;
@@ -130,7 +129,7 @@ export async function calcReserve(
           : 0;
 
       reserve.upr = calculateUPR(inputs, reserve);
-
+      
       reserves.push(reserve);
     } catch (error) {
       console.log(error);
@@ -143,7 +142,7 @@ export async function calcReserve(
 function calculateMortalityRate(age: number, gender: string, mortalityMad: number, ApplyMortality: string, mortalityRates: any, mortalityBERates: any): number {
   const mortalityGrad = mortalityRates[age][gender];
   const mortalityBeGrad = mortalityBERates[age][gender];
-  return (1 - Math.pow(1 - parseFloat(mortalityGrad) * parseFloat(mortalityBeGrad) * percentToDecimal(mortalityMad), 1 / 12)) * parseFloat(ApplyMortality);
+  return (1 - Math.pow(1 - parseFloat(mortalityGrad) * parseFloat(mortalityBeGrad) * mortalityMad, 1 / 12)) * parseFloat(ApplyMortality);
 }
 
 function calculateMorbidityRate(age: number, gender: string, morbAssumpVal: number, ApplyMorbidity: number, morbidityRates: any): number {

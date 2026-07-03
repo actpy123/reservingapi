@@ -54,7 +54,6 @@ export function loadRates<T = any>(assumptions: Assumption[], rateName: string):
 
 export function normalizeProductPercents(product: Record<string, any>) {
   const percentFields = [
-    'Mortality_MAD',
     'UnexpiredRiskPremium',
     'First Year Commission (FYC)',
     'Renewal Commission (RC)',
@@ -138,7 +137,7 @@ export function complieInputs(inputs: any, product: any) {
 
   compliedInputs.fixedInitialExpBE = getAssumptionVal(product['Fixed Initial Exp BE'], compliedInputs.expenseMad, product['MAD FLAG']);
   compliedInputs.claimExpenseFixedVal = getAssumptionVal(product['Claim Expense Fixed BE'], compliedInputs.expenseMad, product['MAD FLAG']);
-  compliedInputs.lapseAssumpVal = percentToDecimal(getAssumptionVal(product['Lapse_Assumption_BE'], percentToDecimal(product['Lapse_MAD']), product['MAD FLAG']));
+  compliedInputs.lapseAssumpVal = getAssumptionVal(product['Lapse_Assumption_BE'], (product['Lapse_MAD']), product['MAD FLAG']);
   compliedInputs.morbAssumpVal = percentToDecimal(getAssumptionVal(product['Morbidity_Assumption_BE'], percentToDecimal(product['Morbidity_MAD']), parseInt(product['MAD FLAG'])));
 
   compliedInputs.policyEffectiveDate = safeParseDate(compliedInputs['policyEffectiveDate']);
