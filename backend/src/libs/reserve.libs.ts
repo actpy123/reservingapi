@@ -93,7 +93,6 @@ function getAssumptionVal(assumptionBE: number | string, mad: number, madFlag: n
 export function complieInputs(inputs: any, product: any) {
   const keyToIgnore: string[] = ['Policy Term_Month', 'Premium Term_Month', 'Premium Frequency', 'Coverage Effective date', 'PH Entry Age'];
   const productkeyToIgnore: string[] = [
-    'Fixed Initial Exp BE',
     'Fixed Renewal Exp BE',
     'Initial(%of Prem) Exp',
     'Lapse_Assumption_BE',
@@ -135,7 +134,10 @@ export function complieInputs(inputs: any, product: any) {
   compliedInputs.sarSolFactor = 0.0003;
   compliedInputs.fixedRenewalExpVal = compliedInputs.renExpBE * compliedInputs.expenseMad;
 
-  compliedInputs.fixedInitialExpBE = getAssumptionVal(product['Fixed Initial Exp BE'], compliedInputs.expenseMad, product['MAD FLAG']);
+  console.log("compliedInputs", product['Fixed Initial Exp BE'],  compliedInputs.expenseMad,product['MAD FLAG']);
+  
+
+  compliedInputs.fixedInitialExpBE = getAssumptionVal(product['Fixed Initial Exp BE'], compliedInputs.expenseMad, 0);
   compliedInputs.claimExpenseFixedVal = getAssumptionVal(product['Claim Expense Fixed BE'], compliedInputs.expenseMad, product['MAD FLAG']);
   compliedInputs.lapseAssumpVal = getAssumptionVal(product['Lapse_Assumption_BE'], (product['Lapse_MAD']), product['MAD FLAG']);
   compliedInputs.morbAssumpVal = percentToDecimal(getAssumptionVal(product['Morbidity_Assumption_BE'], percentToDecimal(product['Morbidity_MAD']), parseInt(product['MAD FLAG'])));

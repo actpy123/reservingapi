@@ -9,8 +9,19 @@ export function toNumber(value: any): number {
 }
 
 export function percentToDecimal(value: string | number): number {
-  if (typeof value === 'string') {
-    return parseFloat(value) / 100;
+  const num =
+    typeof value === 'string'
+      ? parseFloat(value.replace('%', ''))
+      : Number(value);
+
+  if (isNaN(num)) {
+    return 0;
   }
-  return Number(value) / 100;
+
+  // Already a decimal percentage (0.25 = 25%)
+  if (num >= 0 && num <= 1) {
+    return num;
+  }
+
+  return num / 100;
 }

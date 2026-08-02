@@ -112,6 +112,7 @@ export async function calcReserve(
       reserve.maturityOutgo = reserve.livesAtStart * reserve.maturityBenefit;
       reserve.investmentIncome = (reserve.premium - reserve.FYCommission - reserve.initialExpense - reserve.renewalVariableExp - reserve.renewalFixedExp) * reserve.intialYieldRate;
       const r = structuredClone(reserve);
+
       reserve.netCashflow =
         r.duration <= inputs.ptMonths + 1
           ? r.premium +
@@ -129,8 +130,22 @@ export async function calcReserve(
           : 0;
 
       reserve.upr = calculateUPR(inputs, reserve);
-      
+ 
       reserves.push(reserve);
+const { FYCommission } = reserve;
+
+      console.log({
+        duration,
+        intialYieldRate,
+        FYCommission,
+        premium: reserve.premium,
+        initialExpense: reserve.initialExpense,
+        varExpInitialBE: inputs.varExpInitialBE,
+        fixedInitialExpBE: inputs.fixedInitialExpBE,
+        renewalVariableExp: reserve.renewalVariableExp,
+        renewalFixedExp: reserve.renewalFixedExp,
+      });
+      
     } catch (error) {
       console.log(error);
     }
