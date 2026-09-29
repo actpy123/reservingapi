@@ -22,7 +22,7 @@ export interface WorkerInput {
   ssvRates: any;
 }
 
-export default async function (input: WorkerInput) {
+export async function computePolicy(input: WorkerInput) {
   const {
     policyData,
     product,
@@ -114,22 +114,27 @@ export default async function (input: WorkerInput) {
 
     return years * 12 + months;
   }
-  function getPolicyMonths(d1: Date, d3: Date): number {
-    return (d1.getFullYear() - d3.getFullYear()) * 12 + (d1.getMonth() - d3.getMonth());
-  }
+  // Excel BA7 = DATEDIF(effective, valuation, "M"): completed months (day-of-month aware).
 
   const d1 = parseEffectiveDate(product['Valuation Date']);
   const d2 = parseEffectiveDate(cleanPolicyData['maturityDate']);
   const d3 = parseEffectiveDate(cleanPolicyData['policyEffectiveDate']);
-  const policyMonths = getPolicyMonths(d1, d3);
+  const policyMonths = getOutstandingTermMonths(d3, d1);
+  if (policyMonths < 0) {
+    throw new Error(`Valuation date is before the coverage effective date for policy ${cleanPolicyData.policyCoiNumber}`); // Excel: #NUM!
+  }
+  // Row at the valuation date. Policies past maturity have no row: Excel's OFFSET lands on rows where every
+  // reserve column is 0, so report zeros instead of throwing (previously counted as "skipped").
+  const valRow = reserves[policyMonths] ?? { reservePerPolicy: 0, upr: 0, finalReserve: 0, svDeficiencyReserve: 0, livesAtStart: 0 };
+  const hasValRow = policyMonths >= 0 && policyMonths < reserves.length;
 
   const output = {
     'Policy No': cleanPolicyData.policyCoiNumber,
-    'Reserves Per Policy': reserves[policyMonths].reservePerPolicy,
-    'UPR Per Policy': reserves[policyMonths].upr,
-    'Outstanding Term(Months)': getOutstandingTermMonths(d1, d2),
-    'Final Reserve': reserves[policyMonths].finalReserve,
-    'SV Deficiency Reserve': reserves[policyMonths].svDeficiencyReserve,
+    'Reserves Per Policy': valRow.reservePerPolicy,
+    'UPR Per Policy': valRow.upr,
+    'Outstanding Term(Months)': Math.max(getOutstandingTermMonths(d1, d2), 0), // Excel shows #NUM! when matured
+    'Final Reserve': valRow.finalReserve,
+    'SV Deficiency Reserve': valRow.svDeficiencyReserve,
     UIN: cleanPolicyData.uIN,
     'Policy Term_Month': cleanPolicyData.ptMonths,
     Premium: cleanPolicyData.premium,
@@ -142,7 +147,8 @@ export default async function (input: WorkerInput) {
   // const csv = Papa.unparse(reserves);
   // fs.writeFileSync('output222.csv', csv);
 
-  for (let x = 1; x <= cleanPolicyData.ptMonths; x++) {
+  // matured policies contribute no future cashflows (avoids 0/0 = NaN poisoning the portfolio summary)
+  for (let x = 1; hasValRow && valRow.livesAtStart > 0 && x <= cleanPolicyData.ptMonths; x++) {
     const reserveIndex = x - 1;
     const reserveRow = reserves[reserveIndex];
     const cashFlow = {
@@ -166,5 +172,10 @@ export default async function (input: WorkerInput) {
     cashFlows.push(cashFlow);
   }
 
+  return { output, cashFlows, reserves };
+}
+
+export default async function (input: WorkerInput) {
+  const { output, cashFlows } = await computePolicy(input);
   return { output, cashFlows };
 }

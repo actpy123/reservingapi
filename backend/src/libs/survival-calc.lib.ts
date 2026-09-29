@@ -4,7 +4,8 @@ export function calcSurvivalMultiplier(reserve: any, inputs: any): number {
 
   const incomeFrequency = getIncomeFreqInd(inputs);
 
-  if (duration <= incomeSurvivalBenefitStartMonth) {
+  // Excel AJ: IF(A>pt+1,0,IF(A<=start,0, payment-month indicator))
+  if (duration > inputs.ptMonths + 1 || duration <= incomeSurvivalBenefitStartMonth) {
     return 0;
   }
 
@@ -25,7 +26,8 @@ function getIncomeFreqInd(inputs: any): number {
 
 export function calculateIncomeSurvivalBenefit(duration: number, inputs: any): number {
   const { ptMonths, incomeSurvivalFactor, incomeSurvivalBenefitStartMonth } = inputs;
-  if (duration <= ptMonths + 1 || duration <= incomeSurvivalBenefitStartMonth) {
+  // Excel AK: IF(A<=pt+1, IF(A<=start, 0, factor), 0)  (condition was inverted: benefit was only ever paid after the term)
+  if (duration > ptMonths + 1 || duration <= incomeSurvivalBenefitStartMonth) {
     return 0;
   }
 
@@ -35,21 +37,29 @@ export function calculateIncomeSurvivalBenefit(duration: number, inputs: any): n
 export function calculateMaturityBenefit(inputs: any, reserve: any): number {
   const { maturityBenefitFactor } = reserve;
   const { hasMaturityBenefit, sumAssured, premium } = inputs;
-  const base = hasMaturityBenefit === '0' ? 0 : hasMaturityBenefit === '1' ? sumAssured : premium;
+  const flag = String(hasMaturityBenefit);
+  const base = flag === '0' ? 0 : flag === '1' ? sumAssured : premium;
 
   return base * maturityBenefitFactor;
 }
 
 export function calculateUPR(inputs: any, reserve: any): number {
+  // Excel AU: IF(A>pt,0,Premium*IF(ppt=1,(pt-A)/pt,IF(A>ppt,0,((12/fq)-AT)/(12/fq))))
+  // AT (reserve.uprMonths) = months since the last premium due date. Previously used the calendar policy month
+  // (negative UPR for non-annual modes), tested pt=1 instead of ppt=1, and ignored the premium term.
   const { duration } = reserve;
-  const { ptMonths, premium } = inputs;
-  if (duration >= ptMonths + 1) {
+  const { ptMonths, pptMonths, premium } = inputs;
+  if (duration > ptMonths) {
     return 0;
   }
-
-  const factor = ptMonths === 1 ? (ptMonths - duration) / inputs.ptMonths : (12 / inputs.premFq - reserve.month) / (12 / inputs.premFq);
-
-  return premium * factor;
+  if (pptMonths === 1) {
+    return premium * ((ptMonths - duration) / ptMonths);
+  }
+  if (duration > pptMonths) {
+    return 0;
+  }
+  const modalMonths = 12 / inputs.premFq;
+  return premium * ((modalMonths - reserve.uprMonths) / modalMonths);
 }
 
 export function calculateValue(index: number, reservesItems: any[], inputs: any): number {
@@ -81,13 +91,14 @@ export function calcReservePerPolicy(reverse: any, inputs: any): number {
 export function calculateFinalReserve(inputs: any, reserve: any): number {
   const { ptMonths, reserveType, uIN } = inputs;
   const { upr, reservePerPolicy, duration } = reserve;
-  const cleanedReserveType = reserveType.replace(/\s+/g, '');
+  // Excel AW compares text case-insensitively; spaces are ignored here so "Max (GPV, UPR)" and "Max(GPV, UPR)" behave the same.
+  const cleanedReserveType = String(reserveType ?? '').replace(/\s+/g, '').toLowerCase();
   if (duration <= ptMonths) {
-    if (cleanedReserveType === 'GPV') {
+    if (cleanedReserveType === 'gpv') {
       return Math.max(reservePerPolicy, 0);
-    } else if (cleanedReserveType === 'UPR') {
+    } else if (cleanedReserveType === 'upr') {
       return Math.max(upr, 0);
-    } else if (cleanedReserveType.replace(' ', '') === 'Max(GPV,UPR,0)') {
+    } else if (cleanedReserveType === 'max(gpv,upr)' || cleanedReserveType === 'max(gpv,upr,0)') {
       return Math.max(reservePerPolicy, upr, 0);
     } else if (uIN === '163N003V01' || (uIN === '163N001V01' && ptMonths <= 12)) {
       return Math.max(upr, 0);

@@ -47,6 +47,28 @@ export function parsePercent(value: string | number | null | undefined): number 
   return num > 1 ? num / 100 : num;
 }
 
+/**
+ * Parse a multiplicative factor such as a MAD or a BE assumption multiplier.
+ * "120%" -> 1.2, "1.2" -> 1.2, 1.2 -> 1.2.
+ * Unlike parsePercent, values above 1 are NOT divided by 100 (a 120% MAD is 1.2, not 0.012).
+ */
+export function parseFactor(value: string | number | null | undefined, fallback = 0): number {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'number') return isNaN(value) ? fallback : value;
+  const trimmed = value.trim();
+  const num = parseFloat(trimmed.replace('%', ''));
+  if (isNaN(num)) return fallback;
+  return trimmed.endsWith('%') ? num / 100 : num;
+}
+
+/** Parse a plain number (strings like "1,100,000" or " 50 " allowed). */
+export function toFloat(value: any, fallback = 0): number {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'number') return isNaN(value) ? fallback : value;
+  const num = parseFloat(String(value).replace(/,/g, '').trim());
+  return isNaN(num) ? fallback : num;
+}
+
 export function toVariableName(key: string): string {
   // Case 1: If already PascalCase / camelCase
   if (/^[A-Za-z]+$/.test(key)) {
@@ -75,6 +97,9 @@ export function getPremiumFrequencyValue(freq: string): number {
       return 4;
     case 'Monthly':
       return 12;
+    case 'Single':
+      // Single premium: one payment at duration 1 (premium term = 1 month bounds it). Was 0 -> 12/0 -> no premium, NaN UPR.
+      return 1;
     default:
       return 0;
   }
