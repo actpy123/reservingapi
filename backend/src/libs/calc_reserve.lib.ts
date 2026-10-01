@@ -22,24 +22,26 @@ export async function calcReserve(
       const month = ((duration - 1) % 12) + 1;
       const year = Math.floor((duration - 1) / 12) + 1;
       const age = phEntryAge + year - 1;
-      const livesAtStart = month === 1 && year === 1 ? 1 : reserves[duration - 2]?.livesAtEnd ?? 1;
+      const livesAtStart = month === 1 && year === 1 ? 1 : Math.max(reserves[duration - 2]?.livesAtEnd ?? 1, 0);
       const premiumFrequency = duration > pptMonths ? 0 : month === 1 + (12 / premFq) * Math.floor((premFq * (month - 1)) / 12) ? 1 : 0;
       const reservePremium = premium * livesAtStart * premiumFrequency;
-      const cumulativePremium = calcCumulatedPremium([...reserves, { premium: reservePremium }]);
+      // Excel Y: running total of premium, zero after the policy term
+      const cumulativePremium = duration <= ptMonths ? (reserves[duration - 2]?.runningPremium ?? 0) + reservePremium : 0;
+      const runningPremium = (reserves[duration - 2]?.runningPremium ?? 0) + reservePremium;
       const mortalityRate = calculateMortalityRate(age, phGender, mortalityMad, ApplyMortality, mortalityRates, mortalityBERates);
       const morbidityRate = calculateMorbidityRate(age, phGender, morbAssumpVal, ApplyMorbidity, morbidityRates);
-      const lapseRate = calculateLapse(month, year, phGender, lapseAssumpVal, lapseRates, ApplyLapse);
+      const lapseRate = calculateLapse(month, year, phGender, lapseAssumpVal, lapseRates, Number(ApplyLapse ?? 1));
       const mortalityYear = mortalityRate * livesAtStart * (1 - 0.5 * morbidityRate);
       const morbidityYear = morbidityRate * livesAtStart * (1 - 0.5 * mortalityRate);
       const lapseYear = lapseRate * (livesAtStart - mortalityYear - morbidityYear);
-      const livesAtEnd = livesAtStart - mortalityYear - morbidityYear - lapseYear;
+      const livesAtEnd = Math.max(livesAtStart - mortalityYear - morbidityYear - lapseYear, 0);
 
       const inflationFactor =
         month === 1 && year === 1
           ? 1
           : month > 1
           ? reserves[duration - 2].inflationFactor
-          : reserves[duration - 2].inflationFactor * (1 + parseFloat(inflationRates[year - 1].Reserving));
+          : reserves[duration - 2].inflationFactor * (1 + parseFloat(inflationRates[year - 2].Reserving)); // Excel uses the prior year's rate
 
       const intialYieldRate = Math.pow(1 + parseFloat(interestRates[year - 1].Reserving), 1 / 12) - 1;
 
@@ -52,8 +54,9 @@ export async function calcReserve(
         premiumFrequency: premiumFrequency,
         premium: reservePremium,
         cumulativePremium: cumulativePremium,
+        runningPremium,
         mortalityRate: mortalityRate,
-        morbidityRate: mortalityRate,
+        morbidityRate: morbidityRate,
         lapseRate: lapseRate,
         mortalityYear,
         morbidityYear,
@@ -79,25 +82,27 @@ export async function calcReserve(
             (reserve.mortalityYear * (inputs.hasDeathBenefit === '0' ? 0 : 1) + reserve.morbidityYear * (inputs.hasMorbidityBenefit === '0' ? 0 : 1))
           : 0;
 
-      reserve.deathBenefit = calculateDeathBenefit(
+      reserve.deathBenefit = duration > inputs.ptMonths ? 0 : calculateDeathBenefit(
         inputs.hasDeathBenefit,
         inputs.sumAssured,
         loadSchedule[duration - 1].openingBalance,
-        parseFloat(inputs.percentageofpremspaidDeath),
+        Number(inputs.percentageofpremspaidDeath),
         reserve.cumulativePremium,
         inputs.multipleofanualisedpremiumDeath,
         inputs.anualisedPremium
       );
 
       reserve.deathOutGo = duration <= inputs.ptMonths ? reserve.mortalityYear * reserve.deathBenefit : 0;
-      reserve.morbidityBenefit = calculateMorbidityBenefit(inputs, reserve.cumulativePremium, reserve.annualisedPremium);
-      reserve.morbidityOutGo = reserve.morbidityBenefit * reserve.mortalityYear;
+      reserve.morbidityBenefit = duration > inputs.ptMonths ? 0 : calculateMorbidityBenefit(inputs, reserve.cumulativePremium, inputs.anualisedPremium);
+      reserve.morbidityOutGo = reserve.morbidityBenefit * reserve.morbidityYear; // was * mortalityYear
 
-      reserve.gsvFactor = inputs.hasSurrenderBenefit === '2' ? percentToDecimal(gsvRates[reserve.year - 1][Math.ceil(inputs.ptMonths / 12) - 1 + 2]) : 0;
+      const termKey = String(Math.ceil(inputs.ptMonths / 12)); // Excel: VLOOKUP(year, GSV_Table, ROUNDUP(pt/12)-B1+2) = column headed by the term
+      const inTerm = duration <= inputs.ptMonths;
+      reserve.gsvFactor = inTerm && String(inputs.hasSurrenderBenefit) === '2' ? percentToDecimal(gsvRates[reserve.year - 1]?.[termKey] ?? 0) : 0;
       reserve.guaranteedSurrenderValue = reserve.cumulativePremium * reserve.gsvFactor;
-      reserve.ssvFactor = inputs.hasSurrenderBenefit === '2' ? percentToDecimal(ssvRates[reserve.year - 1][Math.ceil(inputs.ptMonths / 12) - 1 + 2]) : 0;
-      reserve.specialSurrenderValue = inputs.sumAssured * reserve.ssvFactor * Math.min(1, duration / inputs.ptMonths);
-      reserve.surrenderBenefit = calculateSurrenderBenefit(inputs, reserve);
+      reserve.ssvFactor = inTerm && String(inputs.hasSurrenderBenefit) === '2' ? percentToDecimal(ssvRates[reserve.year - 1]?.[termKey] ?? 0) : 0;
+      reserve.specialSurrenderValue = inTerm ? inputs.sumAssured * reserve.ssvFactor * Math.min(1, duration / inputs.ptMonths) : 0;
+      reserve.surrenderBenefit = inTerm ? calculateSurrenderBenefit(inputs, reserve) : 0;
       reserve.surrenderOutgo = reserve.lapseYear * reserve.surrenderBenefit;
       reserve.survivalMultiplier = calcSurvivalMultiplier(reserve, inputs);
       reserve.survivalBenefitFactor = calculateIncomeSurvivalBenefit(reserve.duration, inputs);
@@ -129,23 +134,11 @@ export async function calcReserve(
             r.maturityOutgo
           : 0;
 
+      // Excel AT: months elapsed since the last premium due date (1 in a premium month), 0 after the premium term
+      reserve.uprMonths = duration <= pptMonths ? (premiumFrequency !== 0 ? 1 : (reserves[duration - 2]?.uprMonths ?? 0) + 1) : 0;
       reserve.upr = calculateUPR(inputs, reserve);
  
       reserves.push(reserve);
-const { FYCommission } = reserve;
-
-      console.log({
-        duration,
-        intialYieldRate,
-        FYCommission,
-        premium: reserve.premium,
-        initialExpense: reserve.initialExpense,
-        varExpInitialBE: inputs.varExpInitialBE,
-        fixedInitialExpBE: inputs.fixedInitialExpBE,
-        renewalVariableExp: reserve.renewalVariableExp,
-        renewalFixedExp: reserve.renewalFixedExp,
-      });
-      
     } catch (error) {
       console.log(error);
     }
@@ -155,18 +148,20 @@ const { FYCommission } = reserve;
 }
 
 function calculateMortalityRate(age: number, gender: string, mortalityMad: number, ApplyMortality: string, mortalityRates: any, mortalityBERates: any): number {
-  const mortalityGrad = mortalityRates[age][gender];
-  const mortalityBeGrad = mortalityBERates[age][gender];
-  return (1 - Math.pow(1 - parseFloat(mortalityGrad) * parseFloat(mortalityBeGrad) * mortalityMad, 1 / 12)) * parseFloat(ApplyMortality);
+  // blank table cells count as 0, as in Excel
+  const mortalityGrad = parseFloat(mortalityRates[age]?.[gender]) || 0;
+  const mortalityBeGrad = parseFloat(mortalityBERates[age]?.[gender]) || 0;
+  return (1 - Math.pow(1 - mortalityGrad * mortalityBeGrad * mortalityMad, 1 / 12)) * parseFloat(ApplyMortality);
 }
 
 function calculateMorbidityRate(age: number, gender: string, morbAssumpVal: number, ApplyMorbidity: number, morbidityRates: any): number {
-  const morbidityRate = morbidityRates[age][gender];
-  return (1 - Math.pow(1 - parseFloat(morbidityRate) * morbAssumpVal, 1 / 12)) * ApplyMorbidity;
+  const morbidityRate = parseFloat(morbidityRates[age]?.[gender]) || 0;
+  return (1 - Math.pow(1 - morbidityRate * morbAssumpVal, 1 / 12)) * ApplyMorbidity;
 }
 
 function calculateLapse(currentMonth: number, year: number, gender: string, lapseAssumpVal: number, lapseTableGrad: any, applyLapse: number) {
-  return currentMonth === 12 ? lapseTableGrad[year][gender] * lapseAssumpVal : 0 * applyLapse;
+  // Excel G: IF(month=12, lapse(year)*LapseAssump_Val, 0) * ApplyLapse  (ApplyLapse was previously ignored due to operator precedence)
+  return (currentMonth === 12 ? parseFloat(lapseTableGrad[year][gender]) * lapseAssumpVal : 0) * applyLapse;
 }
 
 function calcCumulatedPremium(reserves: any[]) {
@@ -206,12 +201,14 @@ function calculateMorbidityBenefit(inputs: any, cumulativePremium: number, annua
     return sumAssured;
   }
 
-  return Math.max(sumAssured, parseFloat(percentageofpremspaidMorb) * cumulativePremium, multipleofanualisedpremiumMorb * annualisedPremium);
+  return Math.max(sumAssured, Number(percentageofpremspaidMorb) * cumulativePremium, Number(multipleofanualisedpremiumMorb) * annualisedPremium);
 }
 
 function calculateSurrenderBenefit(inputs: any, reserve: any): number {
-  const { hasSurrenderBenefit, unexpiredRiskPremium, ptMonths, sumAssured, deathBenefit } = inputs;
-  const { cumulativePremium, duration, guaranteedSurrenderValue, specialSurrenderValue } = reserve;
+  const { unexpiredRiskPremium, ptMonths, sumAssured } = inputs;
+  const hasSurrenderBenefit = String(inputs.hasSurrenderBenefit);
+  // deathBenefit must come from the current row (Excel Z); inputs.deathBenefit is undefined -> NaN reserves
+  const { cumulativePremium, duration, guaranteedSurrenderValue, specialSurrenderValue, deathBenefit } = reserve;
   if (hasSurrenderBenefit === '0') {
     return 0;
   }

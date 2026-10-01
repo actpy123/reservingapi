@@ -126,7 +126,7 @@ export async function reserveCalculator(req: AuthenticatedRequest, res: Response
     const ssvRates = loadRates(assumptions, product['SSV Table']);
     const maturityBenefitRates = loadRates(assumptions, product['Maturity Benefit Table']);
     const incomeSurvivalBenefitRates = loadRates(assumptions, product['Income_Survival Benefit Table']);
-    product['MAD FLAG'] = toNumber(product['MAD FLAG']);
+    product['MAD FLAG'] = product['MAD FLAG'] === undefined || product['MAD FLAG'] === '' ? 1 : toNumber(product['MAD FLAG']);
 
     const promises = fileData.map((policyData: any) =>
       piscina.run({
